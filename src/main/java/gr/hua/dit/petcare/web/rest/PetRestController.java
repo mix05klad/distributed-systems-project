@@ -36,6 +36,29 @@ public class PetRestController {
         return ResponseEntity.ok(pets);
     }
 
+    // --- ΝΕΑ ---
+    @GetMapping("/{id}")
+    public ResponseEntity<PetView> getPet(@PathVariable("id") Long id) {
+        Long requesterId = getCurrentUserId();
+        PetView pet = petService.getPetById(id, requesterId);
+        return ResponseEntity.ok(pet);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<PetView> updatePet(@PathVariable("id") Long id,
+                                             @Valid @RequestBody CreatePetRequest request) {
+        Long requesterId = getCurrentUserId();
+        PetView pet = petService.updatePet(id, request, requesterId);
+        return ResponseEntity.ok(pet);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deletePet(@PathVariable("id") Long id) {
+        Long requesterId = getCurrentUserId();
+        petService.deletePet(id, requesterId);
+        return ResponseEntity.noContent().build();
+    }
+
     private Long getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Object principal = auth.getPrincipal();
