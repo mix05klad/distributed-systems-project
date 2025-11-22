@@ -1,7 +1,7 @@
 package gr.hua.dit.petcare.service.impl;
 
 import gr.hua.dit.petcare.core.model.Pet;
-import gr.hua. dit.petcare.core.model.User;
+import gr.hua.dit.petcare.core.model.User;
 import gr.hua.dit.petcare.core.repository.PetRepository;
 import gr.hua.dit.petcare.core.repository.UserRepository;
 import gr.hua.dit.petcare.service.PetService;
@@ -32,12 +32,12 @@ public class PetServiceImpl implements PetService {
     @Transactional
     public PetView createPet(CreatePetRequest req, Long ownerId) {
         User owner = userRepository.findById(ownerId)
-                .orElseThrow(() -> new IllegalArgumentException("Owner not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Owner not found: " + ownerId));
 
-        Pet pet = petMapper.toEntity(req);  // maps basic fields
-        pet.setOwner(owner);               // set owner manually
+        Pet pet = petMapper.toEntity(req);
+        pet.setOwner(owner);
 
-        petRepository.save(pet);
+        pet = petRepository.save(pet);
 
         return petMapper.toView(pet);
     }

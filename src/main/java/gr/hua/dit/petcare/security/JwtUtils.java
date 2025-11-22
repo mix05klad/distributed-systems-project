@@ -1,77 +1,101 @@
 package gr.hua.dit.petcare.security;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
-import java.util.*;
+import java.util.Date;
 import java.util.stream.Collectors;
 
 @Component
 public class JwtUtils {
 
-    private final Key key;
-    private final long expirationMs;
+    @Value("${app.jwt.secret}")
+    private String jwtSecret;
 
-    public JwtUtils(@Value("${petcare.jwt.secret}") String secret,
-                    @Value("${petcare.jwt.expiration-ms}") long expirationMs) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
-        this.expirationMs = expirationMs;
+    @Value("${app.jwt.expiration-ms:86400000}") // default: 1 day
+    private long jwtExpirationMs;
+
+    private Key getSigningKey() {
+        // Χρησιμοποιούμε το secret όπως είναι (UTF-8 bytes).
+        // Φρόντισε να είναι αρκετά μεγάλο στο application.properties.
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(ApplicationUserDetails userDetails) {
-        Date now = new Date();
-        Date expiry = new Date(now.getTime() + expirationMs);
+    /**
+     * Δημιουργεί JWT token από Authentication (π.χ. στο login).
+     */
+    public String generateToken(Authentication authentication) {
+        UserDetails principal = (UserDetails) authentication.getPrincipal();
 
-        Map<String, Object> claims = new HashMap<>();
-        // store roles and userId (helpful)
-        claims.put("roles", userDetails.getUser().getRoles());
-        claims.put("userId", userDetails.getUser().getId());
+        String roles = principal.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(","));
+
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
         return Jwts.builder()
-                .setSubject(userDetails.getUsername())
+                .setSubject(principal.getUsername())
+                .claim("roles", roles)
                 .setIssuedAt(now)
-                .setExpiration(expiry)
-                .addClaims(claims)
-                .signWith(key, SignatureAlgorithm.HS256)
+                .setExpiration(expiryDate)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public boolean validateToken(String token) {
-        try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
-            return true;
-        } catch (JwtException | IllegalArgumentException ex) {
-            return false;
-        }
+    /**
+     * Εναλλακτική: δημιουργία JWT κατευθείαν από UserDetails.
+     */
+    public String generateTokenFromUserDetails(UserDetails userDetails) {
+        String roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(","));
+
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
+
+        return Jwts.builder()
+                .setSubject(userDetails.getUsername())
+                .claim("roles", roles)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
     }
 
-    public String getUsernameFromToken(String token) {
-        Claims c = Jwts.parserBuilder().setSigningKey(key).build()
-                .parseClaimsJws(token).getBody();
-        return c.getSubject();
+    public String extractUsername(String token) {
+        return parseClaims(token).getSubject();
     }
 
-    @SuppressWarnings("unchecked")
-    public List<String> getRolesFromToken(String token) {
-        Claims c = Jwts.parserBuilder().setSigningKey(key).build()
-                .parseClaimsJws(token).getBody();
-        Object roles = c.get("roles");
-        if (roles instanceof Collection) {
-            return ((Collection<?>) roles).stream()
-                    .map(Object::toString)
-                    .collect(Collectors.toList());
-        }
-        return List.of();
+    public String extractRoles(String token) {
+        Object roles = parseClaims(token).get("roles");
+        return roles != null ? roles.toString() : "";
     }
 
-    public Long getUserIdFromToken(String token) {
-        Claims c = Jwts.parserBuilder().setSigningKey(key).build()
-                .parseClaimsJws(token).getBody();
-        Object v = c.get("userId");
-        if (v instanceof Number) return ((Number) v).longValue();
-        try { return Long.valueOf(v.toString()); } catch (Exception e) { return null; }
+    public boolean validateToken(String token, UserDetails userDetails) {
+        String username = extractUsername(token);
+        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+    }
+
+    public boolean isTokenExpired(String token) {
+        Date expiration = parseClaims(token).getExpiration();
+        return expiration.before(new Date());
+    }
+
+    private Claims parseClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }

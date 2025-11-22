@@ -1,6 +1,8 @@
 package gr.hua.dit.petcare.core.model;
 
 import jakarta.persistence.*;
+
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -8,24 +10,56 @@ import java.util.Set;
 public class User {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 50)
     private String username;
 
-    @Column(nullable = false)
-    private String password; // hashed
+    @Column(nullable = false, length = 100)
+    private String password;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String fullName;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_roles")
-    private Set<String> roles;
-
+    @Column(length = 150)
     private String email;
+
+    @Column(length = 30)
     private String phoneNumber;
+
+    /**
+     * Απλές string-τιμές ρόλων: "OWNER", "VET", "ADMIN" κτλ.
+     * Τις μετατρέπουμε σε GrantedAuthorities στο ApplicationUserDetails.
+     */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id")
+    )
+    @Column(name = "role", nullable = false, length = 50)
+    private Set<String> roles = new HashSet<>();
+
+    public User() {
+    }
+
+    public User(Long id,
+                String username,
+                String password,
+                String fullName,
+                Set<String> roles,
+                String email,
+                String phoneNumber) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.fullName = fullName;
+        this.roles = roles != null ? roles : new HashSet<>();
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+    }
+
+    // getters / setters
 
     public Long getId() {
         return id;
@@ -64,7 +98,7 @@ public class User {
     }
 
     public void setRoles(Set<String> roles) {
-        this.roles = roles;
+        this.roles = roles != null ? roles : new HashSet<>();
     }
 
     public String getEmail() {
@@ -80,16 +114,6 @@ public class User {
     }
 
     public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public User(Long id, String username, String password, String fullName, Set<String> roles, String email, String phoneNumber) {
-        this.id = id;
-        this.username = username;
-        this.password = password;
-        this.fullName = fullName;
-        this.roles = roles;
-        this.email = email;
         this.phoneNumber = phoneNumber;
     }
 }

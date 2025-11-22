@@ -1,9 +1,13 @@
 package gr.hua.dit.petcare.web.rest;
 
+import gr.hua.dit.petcare.security.ApplicationUserDetails;
 import gr.hua.dit.petcare.service.PetService;
 import gr.hua.dit.petcare.service.model.CreatePetRequest;
 import gr.hua.dit.petcare.service.model.PetView;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,13 +23,25 @@ public class PetRestController {
     }
 
     @PostMapping
-    public PetView create(@Valid @RequestBody CreatePetRequest req,
-                          @RequestParam Long ownerId) {
-        return petService.createPet(req, ownerId);
+    public ResponseEntity<PetView> createPet(@Valid @RequestBody CreatePetRequest request) {
+        Long ownerId = getCurrentUserId();
+        PetView pet = petService.createPet(request, ownerId);
+        return ResponseEntity.ok(pet);
     }
 
-    @GetMapping("/owner/{ownerId}")
-    public List<PetView> getPets(@PathVariable Long ownerId) {
-        return petService.getPetsForOwner(ownerId);
+    @GetMapping
+    public ResponseEntity<List<PetView>> getMyPets() {
+        Long ownerId = getCurrentUserId();
+        List<PetView> pets = petService.getPetsForOwner(ownerId);
+        return ResponseEntity.ok(pets);
+    }
+
+    private Long getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = auth.getPrincipal();
+        if (principal instanceof ApplicationUserDetails details) {
+            return details.getId();
+        }
+        throw new IllegalStateException("No authenticated user");
     }
 }

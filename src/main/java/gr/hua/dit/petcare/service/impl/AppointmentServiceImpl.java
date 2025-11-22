@@ -1,11 +1,16 @@
 package gr.hua.dit.petcare.service.impl;
 
-import gr.hua.dit.petcare.core.model.*;
-import gr.hua.dit.petcare.core.repository.*;
+import gr.hua.dit.petcare.core.model.Appointment;
+import gr.hua.dit.petcare.core.model.AppointmentStatus;
+import gr.hua.dit.petcare.core.model.Pet;
+import gr.hua.dit.petcare.core.model.User;
+import gr.hua.dit.petcare.core.repository.AppointmentRepository;
+import gr.hua.dit.petcare.core.repository.PetRepository;
+import gr.hua.dit.petcare.core.repository.UserRepository;
 import gr.hua.dit.petcare.service.AppointmentService;
 import gr.hua.dit.petcare.service.mapper.AppointmentMapper;
-import gr.hua.dit.petcare.service.model.CreateAppointmentRequest;
 import gr.hua.dit.petcare.service.model.AppointmentView;
+import gr.hua.dit.petcare.service.model.CreateAppointmentRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Transactional
 public class AppointmentServiceImpl implements AppointmentService {
 
     private final AppointmentRepository ar;
@@ -20,8 +26,10 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final UserRepository ur;
     private final AppointmentMapper mapper;
 
-    public AppointmentServiceImpl(AppointmentRepository ar, PetRepository pr,
-                                  UserRepository ur, AppointmentMapper mapper) {
+    public AppointmentServiceImpl(AppointmentRepository ar,
+                                  PetRepository pr,
+                                  UserRepository ur,
+                                  AppointmentMapper mapper) {
         this.ar = ar;
         this.pr = pr;
         this.ur = ur;
@@ -29,83 +37,115 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    @Transactional
     public AppointmentView createAppointment(CreateAppointmentRequest req, Long ownerId) {
-
         Pet pet = pr.findById(req.getPetId())
-                .orElseThrow(() -> new IllegalArgumentException("Pet not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Pet not found: " + req.getPetId()));
 
-        if (!pet.getOwner().getId().equals(ownerId))
+        if (!pet.getOwner().getId().equals(ownerId)) {
             throw new SecurityException("You are not the owner of this pet");
+        }
 
         User vet = ur.findById(req.getVetId())
-                .orElseThrow(() -> new IllegalArgumentException("Vet not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Vet not found: " + req.getVetId()));
 
-        // Overlap check
-        List<Appointment> overlaps = ar.findOverlappingAppointments(
-                vet.getId(), req.getStartTime(), req.getEndTime());
+        if (vet.getRoles().stream().noneMatch(r -> r.equalsIgnoreCase("VET"))) {
+            throw new IllegalArgumentException("Selected user is not a vet");
+        }
 
-        if (!overlaps.isEmpty())
-            throw new IllegalStateException("Overlapping appointment for vet");
+        LocalDateTime start = req.getStartTime();
+        LocalDateTime end = req.getEndTime();
 
-        // Create appointment
+        if (start == null || end == null || !start.isBefore(end)) {
+            throw new IllegalArgumentException("Invalid appointment time range");
+        }
+
+        // Έλεγχος για επικαλυπτόμενα ραντεβού του vet
+        var overlaps = ar.findOverlappingAppointments(vet.getId(), start, end);
+        if (!overlaps.isEmpty()) {
+            throw new IllegalStateException("Vet already has an appointment in this time range");
+        }
+
         Appointment a = new Appointment();
         a.setPet(pet);
         a.setVet(vet);
-        a.setStartTime(req.getStartTime());
-        a.setEndTime(req.getEndTime());
+        a.setStartTime(start);
+        a.setEndTime(end);
         a.setStatus(AppointmentStatus.PENDING);
         a.setOwnerNotes(req.getOwnerNotes());
-        a.setCreatedAt(LocalDateTime.now());
+        a.setVetNotes(null);
 
-        ar.save(a);
+        a = ar.save(a);
 
         return mapper.toView(a);
     }
 
     @Override
-    @Transactional
     public AppointmentView confirmAppointment(Long appointmentId, Long vetId) {
         Appointment a = ar.findById(appointmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Appointment not found: " + appointmentId));
 
-        if (!a.getVet().getId().equals(vetId))
-            throw new SecurityException("Not authorized");
+        if (!a.getVet().getId().equals(vetId)) {
+            throw new SecurityException("You are not the vet for this appointment");
+        }
 
+        if (a.getStatus() != AppointmentStatus.PENDING) {
+            throw new IllegalStateException("Only PENDING appointments can be confirmed");
+        }
+
+        // Προαιρετικά, ξαναελέγχεις για overlap εδώ.
         a.setStatus(AppointmentStatus.CONFIRMED);
+        a = ar.save(a);
+
         return mapper.toView(a);
     }
 
     @Override
-    @Transactional
     public AppointmentView cancelAppointment(Long appointmentId, Long userId) {
         Appointment a = ar.findById(appointmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Appointment not found: " + appointmentId));
 
-        boolean isOwner = a.getPet().getOwner().getId().equals(userId);
-        boolean isVet = a.getVet().getId().equals(userId);
+        Long ownerId = a.getPet().getOwner().getId();
+        Long vetId = a.getVet().getId();
 
-        if (!isOwner && !isVet)
-            throw new SecurityException("Not authorized to cancel");
+        if (!ownerId.equals(userId) && !vetId.equals(userId)) {
+            throw new SecurityException("You are not allowed to cancel this appointment");
+        }
+
+        if (a.getStatus() == AppointmentStatus.CANCELLED) {
+            return mapper.toView(a); // ήδη cancelled
+        }
+
+        if (a.getStatus() == AppointmentStatus.COMPLETED) {
+            throw new IllegalStateException("Completed appointments cannot be cancelled");
+        }
 
         a.setStatus(AppointmentStatus.CANCELLED);
+        a = ar.save(a);
+
         return mapper.toView(a);
     }
 
     @Override
-    @Transactional
     public AppointmentView completeAppointment(Long appointmentId, Long vetId) {
         Appointment a = ar.findById(appointmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Appointment not found: " + appointmentId));
 
-        if (!a.getVet().getId().equals(vetId))
-            throw new SecurityException("Only vet can complete");
+        if (!a.getVet().getId().equals(vetId)) {
+            throw new SecurityException("You are not the vet for this appointment");
+        }
+
+        if (a.getStatus() == AppointmentStatus.CANCELLED) {
+            throw new IllegalStateException("Cancelled appointments cannot be completed");
+        }
 
         a.setStatus(AppointmentStatus.COMPLETED);
+        a = ar.save(a);
+
         return mapper.toView(a);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<AppointmentView> getAppointmentsForOwner(Long ownerId) {
         return ar.findAllByOwner(ownerId)
                 .stream()
@@ -114,6 +154,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<AppointmentView> getAppointmentsForVet(Long vetId) {
         return ar.findAllByVetId(vetId)
                 .stream()

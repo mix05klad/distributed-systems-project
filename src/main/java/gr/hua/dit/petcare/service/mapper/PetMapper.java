@@ -13,6 +13,9 @@ public interface PetMapper {
     @Mapping(source = "owner.fullName", target = "ownerName")
     PetView toView(Pet pet);
 
-    // createPet maps only the simple fields — owner is set in service
+    /**
+     * Δημιουργεί Pet entity από CreatePetRequest.
+     * Ο owner ΔΕΝ μπαίνει εδώ – τον βάζουμε στο service.
+     */
     Pet toEntity(CreatePetRequest req);
 }

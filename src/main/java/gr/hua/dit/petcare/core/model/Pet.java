@@ -6,75 +6,100 @@ import jakarta.persistence.*;
 @Table(name = "pet")
 public class Pet {
 
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable=false)
+    @Column(nullable = false, length = 50)
     private String name;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private PetType type;
 
+    @Column(length = 50)
     private String breed;
+
+    /**
+     * Ηλικία σε έτη – nullable αν ο ιδιοκτήτης δεν θέλει / δεν ξέρει.
+     */
     private Integer age;
 
-    @ManyToOne(optional=false)
+    /**
+     * Ο ιδιοκτήτης του κατοικιδίου.
+     * Χρησιμοποιείται από:
+     * - PetRepository.findByOwnerId
+     * - PetMapper (owner.id, owner.fullName)
+     * - AppointmentRepository.findAllByOwner (μέσω pet.owner.id)
+     */
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
+
+    public Pet() {
+    }
+
+    public Pet(Long id,
+               String name,
+               PetType type,
+               String breed,
+               Integer age,
+               User owner) {
+        this.id = id;
+        this.name = name;
+        this.type = type;
+        this.breed = breed;
+        this.age = age;
+        this.owner = owner;
+    }
+
+    // getters / setters
 
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public PetType getType() {
         return type;
-    }
-
-    public void setType(PetType type) {
-        this.type = type;
     }
 
     public String getBreed() {
         return breed;
     }
 
-    public void setBreed(String breed) {
-        this.breed = breed;
-    }
-
     public Integer getAge() {
         return age;
-    }
-
-    public void setAge(Integer age) {
-        this.age = age;
     }
 
     public User getOwner() {
         return owner;
     }
 
-    public void setOwner(User owner) {
-        this.owner = owner;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public Pet(Long id, String name, PetType type, String breed, Integer age, User owner) {
-        this.id = id;
+    public void setName(String name) {
         this.name = name;
+    }
+
+    public void setType(PetType type) {
         this.type = type;
+    }
+
+    public void setBreed(String breed) {
         this.breed = breed;
+    }
+
+    public void setAge(Integer age) {
         this.age = age;
+    }
+
+    public void setOwner(User owner) {
         this.owner = owner;
     }
 }

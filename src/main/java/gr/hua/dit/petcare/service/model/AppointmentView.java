@@ -1,11 +1,13 @@
 package gr.hua.dit.petcare.service.model;
 
 import gr.hua.dit.petcare.core.model.AppointmentStatus;
+
 import java.time.LocalDateTime;
 
 public class AppointmentView {
 
     private Long id;
+
     private Long petId;
     private String petName;
 
