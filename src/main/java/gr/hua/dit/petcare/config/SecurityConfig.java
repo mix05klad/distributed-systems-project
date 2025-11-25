@@ -49,16 +49,15 @@ public class SecurityConfig {
     public SecurityFilterChain mvcSecurity(HttpSecurity http) throws Exception {
 
         http
-                .securityMatcher("/login", "/register", "/ui/**", "/css/**", "/js/**")
+                .securityMatcher("/", "/login", "/register", "/ui/**", "/css/**", "/js/**")
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/css/**", "/js/**").permitAll()
-                        .requestMatchers("/login", "/register").permitAll()
+                        .requestMatchers("/", "/login", "/register", "/css/**", "/js/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/ui/home", true)
+                        .defaultSuccessUrl("/ui/role-redirect", true)
                         .permitAll()
                 )
                 .logout(logout -> logout
@@ -69,6 +68,7 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 
     // ------------------------------------------------------------
     // 2) API SECURITY (JWT, STATELESS) — ORDER 2

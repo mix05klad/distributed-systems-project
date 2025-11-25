@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="el">
+<head>
+  <meta charset="UTF-8">
+  <title>Register Pet</title>
+</head>
+<body>
+<h2>Register your new Pet</h2>
+
+<!-- Success message -->
+<div th:if="${successMessage}">
+  <p th:text="${successMessage}" style="color:green;"></p>
+</div>
+
+<form th:action="@{/ui/owner/register-pet}" th:object="${petForm}" method="post">
+  <div>
+    <label>Name</label>
+    <input th:field="*{name}" />
+    <div th:if="${#fields.hasErrors('name')}" th:errors="*{name}" style="color:red;"></div>
+  </div>
+
+  <div>
+    <label>Type</label>
+    <select th:field="*{type}">
+      <option th:each="t : ${T(gr.hua.dit.petcare.core.model.PetType).values()}"
+              th:value="${t}"
+              th:text="${t}">TYPE</option>
+    </select>
+    <div th:if="${#fields.hasErrors('type')}" th:errors="*{type}" style="color:red;"></div>
+  </div>
+
+  <div>
+    <label>Breed</label>
+    <input th:field="*{breed}" />
+    <div th:if="${#fields.hasErrors('breed')}" th:errors="*{breed}" style="color:red;"></div>
+  </div>
+
+  <div>
+    <label>Age (in years)</label>
+    <input type="number" th:field="*{age}" min="0" />
+    <div th:if="${#fields.hasErrors('age')}" th:errors="*{age}" style="color:red;"></div>
+  </div>
+
+  <div>
+    <button type="submit">Register</button>
+    <button type="button" onclick="location.href='/ui/owner/home'">Return</button>
+  </div>
+</form>
+
+</body>
+</html>
