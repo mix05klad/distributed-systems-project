@@ -5,6 +5,7 @@ import gr.hua.dit.petcare.security.JwtAuthFilter;
 import gr.hua.dit.petcare.security.RestAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -25,7 +26,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity // για @PreAuthorize κλπ, αν το θες αργότερα σε services/controllers
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
@@ -40,49 +41,58 @@ public class SecurityConfig {
         this.userDetailsService = userDetailsService;
     }
 
-    /**
-     * Κύριο SecurityFilterChain.
-     *
-     * Εδώ ρυθμίζουμε:
-     * - JWT stateless security
-     * - ποια endpoints είναι ανοιχτά (auth, swagger κλπ)
-     * - εξαίρεση για H2 console (αν τη χρησιμοποιείς)
-     */
+    // ------------------------------------------------------------
+    // 1) MVC SECURITY (STATEFUL) — ORDER 1
+    // ------------------------------------------------------------
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   AuthenticationProvider authenticationProvider) throws Exception {
+    @Order(1)
+    public SecurityFilterChain mvcSecurity(HttpSecurity http) throws Exception {
 
         http
-                // Δεν χρειαζόμαστε CSRF για καθαρό REST + JWT
+                .securityMatcher("/login", "/register", "/ui/**", "/css/**", "/js/**")
                 .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/css/**", "/js/**").permitAll()
+                        .requestMatchers("/login", "/register").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/ui/home", true)
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        .permitAll()
+                );
 
-                // CORS ρυθμίσεις (βλέπε corsConfigurationSource)
+        return http.build();
+    }
+
+    // ------------------------------------------------------------
+    // 2) API SECURITY (JWT, STATELESS) — ORDER 2
+    // ------------------------------------------------------------
+    @Bean
+    @Order(2)
+    public SecurityFilterChain apiSecurity(HttpSecurity http,
+                                           AuthenticationProvider authenticationProvider) throws Exception {
+
+        http
+                .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-                // Δεν κρατάμε sessions, όλα με JWT
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                // Custom entry point για 401/json αντί για redirect σε login page
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(restAuthenticationEntryPoint)
                 )
-
-                // Ποια endpoints είναι ανοιχτά
                 .authorizeHttpRequests(auth -> auth
-                        // AUTH REST endpoints (login/register)
                         .requestMatchers("/api/auth/**").permitAll()
-
-                        // Swagger / OpenAPI για development
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
-
-                        // H2 console (αν τη χρησιμοποιείς)
                         .requestMatchers("/h2-console/**").permitAll()
-
-                        // (Προαιρετικά) static resources / root paths
                         .requestMatchers(
                                 "/",
                                 "/error",
@@ -90,18 +100,11 @@ public class SecurityConfig {
                                 "/js/**",
                                 "/images/**"
                         ).permitAll()
-
-                        // Οτιδήποτε άλλο → authenticated
                         .anyRequest().authenticated()
                 )
-
-                // Ορίζουμε ποιο AuthenticationProvider θα χρησιμοποιείται
                 .authenticationProvider(authenticationProvider)
-
-                // Προσθέτουμε το JWT filter ΠΡΙΝ το UsernamePasswordAuthenticationFilter
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // Για να παίζει η H2 console σε iframe
         http.headers(headers ->
                 headers.frameOptions(frameOptions -> frameOptions.disable())
         );
@@ -109,11 +112,10 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /**
-     * DaoAuthenticationProvider που χρησιμοποιεί:
-     * - το δικό μας UserDetailsService
-     * - το global PasswordEncoder
-     */
+    // ------------------------------------------------------------
+    // COMMON BEANS
+    // ------------------------------------------------------------
+
     @Bean
     public AuthenticationProvider authenticationProvider(PasswordEncoder passwordEncoder,
                                                          UserDetailsService userDetailsService) {
@@ -123,42 +125,24 @@ public class SecurityConfig {
         return authProvider;
     }
 
-    /**
-     * Εκθέτουμε το AuthenticationManager ώστε να μπορεί
-     * να γίνει inject στο AuthRestController ή στο UserServiceImpl
-     * για login (username/password auth).
-     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
-    /**
-     * CORS config – αυτή τη στιγμή είναι "χαλαρή" για development.
-     * Μπορείς αργότερα να την σφίξεις (συγκεκριμένα origins).
-     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        // Για development: επιτρέπει όλα τα origins.
-        // Αργότερα μπορείς να βάλεις π.χ. List.of("http://localhost:3000")
         configuration.setAllowedOriginPatterns(List.of("*"));
-
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-
         return source;
     }
 
-    /**
-     * Optional, αλλά καλό να υπάρχει αν θες να inject-άρεις
-     * το UserDetailsService από Spring Security API.
-     */
     @Bean
     public UserDetailsService userDetailsService() {
         return userDetailsService;
