@@ -12,20 +12,12 @@ public class Appointment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**
-     * Το κατοικίδιο στο οποίο αφορά το ραντεβού.
-     */
+    // αναγνωριστικό κατοικιδίου
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "pet_id", nullable = false)
     private Pet pet;
 
-    /**
-     * Ο κτηνίατρος που θα δει το κατοικίδιο.
-     * Χρησιμοποιείται στα:
-     * - AppointmentRepository.findOverlappingAppointments (a.vet.id)
-     * - AppointmentRepository.findAllByVetId
-     * - AppointmentMapper (vet.id, vet.fullName)
-     */
+    // αναγνωριστικό κτηνιάτρου
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "vet_id", nullable = false)
     private User vet;
@@ -40,23 +32,11 @@ public class Appointment {
     @Column(nullable = false, length = 20)
     private AppointmentStatus status = AppointmentStatus.PENDING;
 
-    /**
-     * Σημειώσεις από τον ιδιοκτήτη κατά την κράτηση.
-     */
-    @Column(length = 500)
-    private String ownerNotes;
-
-    /**
-     * Σημειώσεις από τον κτηνίατρο μετά την επίσκεψη
-     * (διάγνωση, θεραπεία, εμβόλια κλπ).
-     */
+    // σημειώσεις κτηνιάτρου για κατοικίδιο
     @Column(length = 500)
     private String vetNotes;
 
-    /**
-     * Ημερομηνία δημιουργίας της εγγραφής.
-     * Συμπληρώνεται αυτόματα στο @PrePersist.
-     */
+    // αυτόματη συμπλήρωση της ημερομηνίας εγγραφής
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
@@ -69,7 +49,6 @@ public class Appointment {
                        LocalDateTime startTime,
                        LocalDateTime endTime,
                        AppointmentStatus status,
-                       String ownerNotes,
                        String vetNotes,
                        LocalDateTime createdAt) {
         this.id = id;
@@ -78,7 +57,6 @@ public class Appointment {
         this.startTime = startTime;
         this.endTime = endTime;
         this.status = status;
-        this.ownerNotes = ownerNotes;
         this.vetNotes = vetNotes;
         this.createdAt = createdAt;
     }
@@ -116,10 +94,6 @@ public class Appointment {
         return status;
     }
 
-    public String getOwnerNotes() {
-        return ownerNotes;
-    }
-
     public String getVetNotes() {
         return vetNotes;
     }
@@ -150,10 +124,6 @@ public class Appointment {
 
     public void setStatus(AppointmentStatus status) {
         this.status = status;
-    }
-
-    public void setOwnerNotes(String ownerNotes) {
-        this.ownerNotes = ownerNotes;
     }
 
     public void setVetNotes(String vetNotes) {

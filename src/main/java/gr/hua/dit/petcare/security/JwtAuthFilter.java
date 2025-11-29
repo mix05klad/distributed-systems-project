@@ -56,18 +56,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     }
                 }
             } catch (Exception ex) {
-                // Αν κάτι σπάσει στην JWT επεξεργασία, απλά δεν κάνουμε authenticate
-                // και αφήνουμε το RestAuthenticationEntryPoint να απαντήσει όπου χρειαστεί.
+                // TODO
             }
         }
 
         filterChain.doFilter(request, response);
     }
 
-    /**
-     * Παίρνει το JWT από το Authorization header:
-     * "Authorization: Bearer <token>"
-     */
     private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
 

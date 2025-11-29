@@ -31,7 +31,7 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Username already in use");
         }
 
-        // Validate role using the Role enum
+        // επιβεβαίση ρόλου μέσω του enum
         String roleStr = req.getRole();
         if (roleStr == null) {
             throw new IllegalArgumentException("Role is required");

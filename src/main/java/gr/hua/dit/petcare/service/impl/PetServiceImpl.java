@@ -47,9 +47,6 @@ public class PetServiceImpl implements PetService {
         return petRepository.findByOwnerId(ownerId).stream().map(petMapper::toView).toList();
     }
 
-    // -----------------------
-    // ΝΕΕΣ ΜΕΘΟΔΟΙ
-    // -----------------------
 
     @Override
     @Transactional(readOnly = true)
@@ -71,7 +68,6 @@ public class PetServiceImpl implements PetService {
             throw new AccessDeniedException("You are not the owner of this pet");
         }
 
-        // Ενημερώνουμε τα επιτρεπόμενα πεδία
         pet.setName(req.getName());
         pet.setType(req.getType());
         pet.setBreed(req.getBreed());

@@ -19,9 +19,6 @@ public class CreateAppointmentRequest {
     @NotNull
     private LocalDateTime endTime;
 
-    @Size(max = 500)
-    private String ownerNotes;
-
     public Long getPetId() {
         return petId;
     }
@@ -54,11 +51,4 @@ public class CreateAppointmentRequest {
         this.endTime = endTime;
     }
 
-    public String getOwnerNotes() {
-        return ownerNotes;
-    }
-
-    public void setOwnerNotes(String ownerNotes) {
-        this.ownerNotes = ownerNotes;
-    }
 }

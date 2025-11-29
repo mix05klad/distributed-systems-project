@@ -41,9 +41,6 @@ public class SecurityConfig {
         this.userDetailsService = userDetailsService;
     }
 
-    // ------------------------------------------------------------
-    // 1) MVC SECURITY (STATEFUL) — ORDER 1
-    // ------------------------------------------------------------
     @Bean
     @Order(1)
     public SecurityFilterChain mvcSecurity(HttpSecurity http) throws Exception {
@@ -70,9 +67,6 @@ public class SecurityConfig {
     }
 
 
-    // ------------------------------------------------------------
-    // 2) API SECURITY (JWT, STATELESS) — ORDER 2
-    // ------------------------------------------------------------
     @Bean
     @Order(2)
     public SecurityFilterChain apiSecurity(HttpSecurity http,
@@ -112,9 +106,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ------------------------------------------------------------
-    // COMMON BEANS
-    // ------------------------------------------------------------
 
     @Bean
     public AuthenticationProvider authenticationProvider(PasswordEncoder passwordEncoder,

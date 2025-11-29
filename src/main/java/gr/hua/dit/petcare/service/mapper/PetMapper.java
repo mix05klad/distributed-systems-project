@@ -13,9 +13,6 @@ public interface PetMapper {
     @Mapping(source = "owner.fullName", target = "ownerName")
     PetView toView(Pet pet);
 
-    /**
-     * Δημιουργεί Pet entity από CreatePetRequest.
-     * Ο owner ΔΕΝ μπαίνει εδώ – τον βάζουμε στο service.
-     */
+    // δημιουργία Pet entity
     Pet toEntity(CreatePetRequest req);
 }

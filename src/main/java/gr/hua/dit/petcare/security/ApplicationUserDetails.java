@@ -42,7 +42,7 @@ public class ApplicationUserDetails implements UserDetails {
                 user.getUsername(),
                 user.getPassword(),
                 authorities,
-                true // αν θέλεις αργότερα μπορείς να χρησιμοποιείς user.isEnabled()
+                true
         );
     }
 
@@ -65,7 +65,7 @@ public class ApplicationUserDetails implements UserDetails {
         return username;
     }
 
-    // Τα παρακάτω τα κρατάμε true για τώρα
+    // TODO
     @Override
     public boolean isAccountNonExpired() {
         return true;

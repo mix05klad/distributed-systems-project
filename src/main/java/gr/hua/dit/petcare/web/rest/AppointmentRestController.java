@@ -22,9 +22,7 @@ public class AppointmentRestController {
         this.appointmentService = appointmentService;
     }
 
-    /**
-     * Owner δημιουργεί νέο ραντεβού για pet που του ανήκει.
-     */
+    // καταχώρηση νέου ραντεβού
     @PostMapping
     public ResponseEntity<AppointmentView> createAppointment(
             @Valid @RequestBody CreateAppointmentRequest request) {
@@ -34,9 +32,7 @@ public class AppointmentRestController {
         return ResponseEntity.ok(view);
     }
 
-    /**
-     * Όλα τα ραντεβού για τον τρέχον ιδιοκτήτη (owner).
-     */
+    // όλα τα ραντεβού ενός ιδιοκτήτη
     @GetMapping("/owner")
     public ResponseEntity<List<AppointmentView>> getOwnerAppointments() {
         Long ownerId = getCurrentUserId();
@@ -44,9 +40,7 @@ public class AppointmentRestController {
         return ResponseEntity.ok(list);
     }
 
-    /**
-     * Όλα τα ραντεβού για τον τρέχον vet.
-     */
+    // όλα τα ραντεβού ενός κτηνιάτρου
     @GetMapping("/vet")
     public ResponseEntity<List<AppointmentView>> getVetAppointments() {
         Long vetId = getCurrentUserId();
@@ -54,9 +48,7 @@ public class AppointmentRestController {
         return ResponseEntity.ok(list);
     }
 
-    /**
-     * Vet επιβεβαιώνει ραντεβού.
-     */
+    // επιβεβαίωση ραντεβού
     @PostMapping("/{id}/confirm")
     public ResponseEntity<AppointmentView> confirmAppointment(@PathVariable Long id) {
         Long vetId = getCurrentUserId();
@@ -64,9 +56,7 @@ public class AppointmentRestController {
         return ResponseEntity.ok(view);
     }
 
-    /**
-     * Owner ή vet ακυρώνει ραντεβού.
-     */
+    // ακύρωση ραντεβού
     @PostMapping("/{id}/cancel")
     public ResponseEntity<AppointmentView> cancelAppointment(@PathVariable Long id) {
         Long userId = getCurrentUserId();
@@ -74,9 +64,7 @@ public class AppointmentRestController {
         return ResponseEntity.ok(view);
     }
 
-    /**
-     * Vet ολοκληρώνει ραντεβού.
-     */
+    // ολοκλήρωση ραντεβού από τον κτηνίατρο
     @PostMapping("/{id}/complete")
     public ResponseEntity<AppointmentView> completeAppointment(@PathVariable Long id) {
         Long vetId = getCurrentUserId();

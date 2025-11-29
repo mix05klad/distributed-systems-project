@@ -25,14 +25,10 @@ public class JwtUtils {
     private long jwtExpirationMs;
 
     private Key getSigningKey() {
-        // Χρησιμοποιούμε το secret όπως είναι (UTF-8 bytes).
-        // Φρόντισε να είναι αρκετά μεγάλο στο application.properties.
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
-    /**
-     * Δημιουργεί JWT token από Authentication (π.χ. στο login).
-     */
+    // δημιουργία JTW token
     public String generateToken(Authentication authentication) {
         UserDetails principal = (UserDetails) authentication.getPrincipal();
 
@@ -52,9 +48,7 @@ public class JwtUtils {
                 .compact();
     }
 
-    /**
-     * Εναλλακτική: δημιουργία JWT κατευθείαν από UserDetails.
-     */
+    // δημιουργία JTW από UserDetails
     public String generateTokenFromUserDetails(UserDetails userDetails) {
         String roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)

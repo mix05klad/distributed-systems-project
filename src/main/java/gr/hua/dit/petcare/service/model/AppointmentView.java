@@ -19,7 +19,6 @@ public class AppointmentView {
 
     private AppointmentStatus status;
 
-    private String ownerNotes;
     private String vetNotes;
 
     public Long getId() {
@@ -84,14 +83,6 @@ public class AppointmentView {
 
     public void setStatus(AppointmentStatus status) {
         this.status = status;
-    }
-
-    public String getOwnerNotes() {
-        return ownerNotes;
-    }
-
-    public void setOwnerNotes(String ownerNotes) {
-        this.ownerNotes = ownerNotes;
     }
 
     public String getVetNotes() {

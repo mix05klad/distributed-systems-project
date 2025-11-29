@@ -28,10 +28,6 @@ public class User {
     @Column(length = 30)
     private String phoneNumber;
 
-    /**
-     * Απλές string-τιμές ρόλων: "OWNER", "VET", "ADMIN" κτλ.
-     * Τις μετατρέπουμε σε GrantedAuthorities στο ApplicationUserDetails.
-     */
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "user_roles",
@@ -58,8 +54,6 @@ public class User {
         this.email = email;
         this.phoneNumber = phoneNumber;
     }
-
-    // getters / setters
 
     public Long getId() {
         return id;

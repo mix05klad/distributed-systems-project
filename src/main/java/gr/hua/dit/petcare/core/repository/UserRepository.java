@@ -9,9 +9,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByUsername(String username);
 
-    /**
-     * Χρήσιμο για validation στο registration:
-     * - να μην επιτρέπεται διπλό username
-     */
+    // αποτρέπει την εισαγωγή υπάρχοντος username
     boolean existsByUsername(String username);
 }

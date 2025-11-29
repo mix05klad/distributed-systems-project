@@ -72,8 +72,6 @@ public class AuthRestController {
         }
     }
 
-    // ---- simple DTOs just for this controller ----
-
     public static class LoginRequest {
         private String username;
         private String password;

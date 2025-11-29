@@ -10,16 +10,7 @@ import java.util.List;
 
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
 
-    /**
-     * Βρίσκει ραντεβού που επικαλύπτονται χρονικά για έναν συγκεκριμένο vet.
-     *
-     * Συνθήκη επικάλυψης:
-     *  - a.startTime < :end
-     *  - a.endTime   > :start
-     *
-     * Επιπλέον, φιλτράρουμε μόνο σε PENDING/CONFIRMED, ώστε
-     * CANCELLED/COMPLETED να μην μπλοκάρουν νέα ραντεβού.
-     */
+    // έλεγχος των PENDING/CONFIRMED ραντεβού ώστε να μην υπάρχει conflict
     @Query("""
         select a 
         from Appointment a
@@ -37,10 +28,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("end") LocalDateTime end
     );
 
-    /**
-     * Όλα τα ραντεβού για έναν ιδιοκτήτη, μέσω της σχέσης:
-     * Appointment -> Pet -> Owner.
-     */
+    // δίνει όλα τα ραντεβού για έναν ιδιοκτήτη
     @Query("""
         select a
         from Appointment a
@@ -49,10 +37,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     """)
     List<Appointment> findAllByOwner(@Param("ownerId") Long ownerId);
 
-    /**
-     * Όλα τα ραντεβού για έναν συγκεκριμένο vet.
-     * Χρησιμοποιεί το path vet.id.
-     */
+    // δίνει όλα τα ρεαντεβού για έναν κτηνίατρο
     @Query("""
         select a
         from Appointment a

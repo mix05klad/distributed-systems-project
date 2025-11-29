@@ -71,7 +71,6 @@ public class AppointmentServiceImpl implements AppointmentService {
         a.setStartTime(start);
         a.setEndTime(end);
         a.setStatus(AppointmentStatus.PENDING);
-        a.setOwnerNotes(req.getOwnerNotes());
         a.setVetNotes(null);
 
         a = ar.save(a);

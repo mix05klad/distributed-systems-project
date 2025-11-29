@@ -20,18 +20,10 @@ public class Pet {
     @Column(length = 50)
     private String breed;
 
-    /**
-     * Ηλικία σε έτη – nullable αν ο ιδιοκτήτης δεν θέλει / δεν ξέρει.
-     */
+    // ηλικία (ακέραιος) ή null
     private Integer age;
 
-    /**
-     * Ο ιδιοκτήτης του κατοικιδίου.
-     * Χρησιμοποιείται από:
-     * - PetRepository.findByOwnerId
-     * - PetMapper (owner.id, owner.fullName)
-     * - AppointmentRepository.findAllByOwner (μέσω pet.owner.id)
-     */
+    // αναγνωριστικό ιδιοκτήτη
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
@@ -52,8 +44,6 @@ public class Pet {
         this.age = age;
         this.owner = owner;
     }
-
-    // getters / setters
 
     public Long getId() {
         return id;

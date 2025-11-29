@@ -16,9 +16,7 @@ public class ApplicationUserDetailsService implements UserDetailsService {
         this.userRepository = userRepository;
     }
 
-    /**
-     * Καλείται από Spring Security όταν γίνεται authentication με username/password.
-     */
+    // καλείται για authentication
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository
