@@ -91,7 +91,6 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new IllegalStateException("Only PENDING appointments can be confirmed");
         }
 
-        // Προαιρετικά, ξαναελέγχεις για overlap εδώ.
         a.setStatus(AppointmentStatus.CONFIRMED);
         a = ar.save(a);
 
