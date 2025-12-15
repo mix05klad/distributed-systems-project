@@ -37,7 +37,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     """)
     List<Appointment> findAllByOwner(@Param("ownerId") Long ownerId);
 
-    // δίνει όλα τα ρεαντεβού για έναν κτηνίατρο
+    // δίνει όλα τα ραντεβού για έναν κτηνίατρο
     @Query("""
         select a
         from Appointment a

@@ -7,6 +7,7 @@ import gr.hua.dit.petcare.core.model.User;
 import gr.hua.dit.petcare.core.repository.AppointmentRepository;
 import gr.hua.dit.petcare.core.repository.PetRepository;
 import gr.hua.dit.petcare.core.repository.UserRepository;
+import gr.hua.dit.petcare.core.repository.VetAvailabilityRepository;
 import gr.hua.dit.petcare.service.AppointmentService;
 import gr.hua.dit.petcare.service.mapper.AppointmentMapper;
 import gr.hua.dit.petcare.service.model.AppointmentView;
@@ -25,15 +26,18 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final PetRepository pr;
     private final UserRepository ur;
     private final AppointmentMapper mapper;
+    private final VetAvailabilityRepository vetAvailabilityRepository;
 
     public AppointmentServiceImpl(AppointmentRepository ar,
                                   PetRepository pr,
                                   UserRepository ur,
-                                  AppointmentMapper mapper) {
+                                  AppointmentMapper mapper,
+                                  VetAvailabilityRepository vetAvailabilityRepository) {
         this.ar = ar;
         this.pr = pr;
         this.ur = ur;
         this.mapper = mapper;
+        this.vetAvailabilityRepository = vetAvailabilityRepository;
     }
 
     @Override
@@ -57,6 +61,15 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         if (start == null || end == null || !start.isBefore(end)) {
             throw new IllegalArgumentException("Invalid appointment time range");
+        }
+
+        // Έλεγχος ότι το ραντεβού είναι μέσα σε δηλωμένη διαθεσιμότητα του vet
+        boolean covered = !vetAvailabilityRepository
+                .findSlotsCovering(vet.getId(), start, end)
+                .isEmpty();
+
+        if (!covered) {
+            throw new IllegalStateException("Selected time is outside vet availability");
         }
 
         // Έλεγχος για επικαλυπτόμενα ραντεβού του vet
