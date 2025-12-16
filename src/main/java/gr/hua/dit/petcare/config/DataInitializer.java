@@ -32,14 +32,11 @@ public class DataInitializer {
                                       PasswordEncoder passwordEncoder) {
 
         return args -> {
-            // Αν υπάρχουν ήδη users, μην κάνεις seed (για να μην τα διπλασιάζεις).
             if (userRepository.count() > 0) {
                 return;
             }
 
-            // =======================
             // 1. Χρήστες (Owners, Vets)
-            // =======================
 
             // Owners
             User owner1 = new User();
@@ -89,9 +86,8 @@ public class DataInitializer {
             vet2 = userRepository.save(vet2);
 
 
-            // =======================
+
             // 2. Pets
-            // =======================
 
             Pet rex = new Pet();
             rex.setName("Rex");
@@ -117,9 +113,7 @@ public class DataInitializer {
             max.setOwner(owner2);
             max = petRepository.save(max);
 
-            // =======================
             // 3. Διαθεσιμότητες κτηνιάτρων (VetAvailability)
-            // =======================
 
             LocalDate today = LocalDate.now();
 
@@ -152,9 +146,7 @@ public class DataInitializer {
             v2Slot1.setEndTime(v2Slot1End);
             v2Slot1 = vetAvailabilityRepository.save(v2Slot1);
 
-            // =======================
             // 4. Ραντεβού (Appointments)
-            // =======================
 
             // Ραντεβού 1: Rex με vet1 αύριο 09:00–10:00 (μέσα στο v1Slot1)
             LocalDateTime ap1Start = LocalDateTime.of(today.plusDays(1), LocalTime.of(9, 0));
