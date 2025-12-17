@@ -172,4 +172,24 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .map(mapper::toView)
                 .toList();
     }
+
+    @Override
+    public AppointmentView updateVisitNotes(Long appointmentId, Long vetId, String notes) {
+        Appointment a = ar.findById(appointmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Appointment not found: " + appointmentId));
+
+        if (!a.getVet().getId().equals(vetId)) {
+            throw new SecurityException("You are not the vet for this appointment");
+        }
+
+        if (a.getStatus() != AppointmentStatus.COMPLETED) {
+            throw new IllegalStateException("Only COMPLETED appointments can have visit notes");
+        }
+
+        a.setVetNotes(notes);
+        a = ar.save(a);
+
+        return mapper.toView(a);
+    }
+
 }

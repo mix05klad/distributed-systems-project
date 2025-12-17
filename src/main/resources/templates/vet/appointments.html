@@ -23,20 +23,26 @@
      th:href="@{/ui/vet/appointments(showCompleted=false)}">Hide completed</a>
 </div>
 
-<!-- Πίνακας ραντεβού -->
 <table border="1" th:if="${appointments != null && !appointments.isEmpty()}">
   <tr>
     <th>Pet</th>
+    <th>Vet</th>
     <th>Start</th>
     <th>End</th>
     <th>Status</th>
+    <th>Notes</th>
     <th>Actions</th>
   </tr>
   <tr th:each="a : ${appointments}">
     <td th:text="${a.petName}">Pet</td>
+    <td th:text="${a.vetName}">Vet</td>
     <td th:text="${a.startTime}">Start</td>
     <td th:text="${a.endTime}">End</td>
     <td th:text="${a.status}">Status</td>
+    <td>
+      <span th:if="${a.vetNotes != null and !#strings.isEmpty(a.vetNotes)}">✔</span>
+      <span th:if="${a.vetNotes == null or #strings.isEmpty(a.vetNotes)}">—</span>
+    </td>
     <td>
       <!-- Confirm μόνο όταν είναι PENDING -->
       <form th:if="${a.status != null and a.status.toString() == 'PENDING'}"
@@ -46,12 +52,28 @@
         <button type="submit">Confirm</button>
       </form>
 
+      <!-- Complete όταν είναι CONFIRMED -->
+      <form th:if="${a.status != null and a.status.toString() == 'CONFIRMED'}"
+            th:action="@{|/ui/vet/appointments/${a.id}/complete|}"
+            method="post"
+            style="display:inline">
+        <button type="submit">Complete</button>
+      </form>
+
       <!-- Cancel όταν είναι PENDING ή CONFIRMED -->
       <form th:if="${a.status != null and (a.status.toString() == 'PENDING' or a.status.toString() == 'CONFIRMED')}"
             th:action="@{|/ui/vet/appointments/${a.id}/cancel|}"
             method="post"
             style="display:inline">
         <button type="submit">Cancel</button>
+      </form>
+
+      <!-- Notes μόνο όταν είναι COMPLETED -->
+      <form th:if="${a.status != null and a.status.toString() == 'COMPLETED'}"
+            th:action="@{|/ui/vet/appointments/${a.id}/notes|}"
+            method="get"
+            style="display:inline">
+        <button type="submit">Notes</button>
       </form>
     </td>
   </tr>

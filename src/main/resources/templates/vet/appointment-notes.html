@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="el">
+<head>
+  <meta charset="UTF-8">
+  <title>Visit Notes</title>
+</head>
+<body>
+
+<h1>Record Visit Notes / Treatments</h1>
+
+<div th:if="${appointment != null}">
+  <p>
+    <strong>Pet:</strong> <span th:text="${appointment.petName}">Pet</span><br/>
+    <strong>Vet:</strong> <span th:text="${appointment.vetName}">Vet</span><br/>
+    <strong>Start:</strong> <span th:text="${appointment.startTime}">Start</span><br/>
+    <strong>End:</strong> <span th:text="${appointment.endTime}">End</span><br/>
+    <strong>Status:</strong> <span th:text="${appointment.status}">Status</span>
+  </p>
+</div>
+
+<form th:action="@{|/ui/vet/appointments/${appointment.id}/notes|}"
+      th:object="${notesForm}"
+      method="post">
+
+  <div>
+    <label>Diagnosis / Treatments / Vaccines (free text)</label><br/>
+    <textarea th:field="*{notes}" rows="8" cols="60"></textarea>
+    <div th:if="${#fields.hasErrors('notes')}"
+         th:errors="*{notes}" style="color:red;"></div>
+  </div>
+
+  <div>
+    <button type="submit">Save</button>
+    <button type="button" onclick="location.href='/ui/vet/appointments'">Back</button>
+  </div>
+</form>
+
+</body>
+</html>
