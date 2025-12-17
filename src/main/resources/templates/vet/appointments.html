@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="el">
+<head>
+  <meta charset="UTF-8">
+  <title>Vet Appointments</title>
+</head>
+<body>
+
+<h1>My Appointments</h1>
+
+<div th:if="${successMessage}">
+  <p th:text="${successMessage}" style="color:green;"></p>
+</div>
+
+<div th:if="${errorMessage}">
+  <p th:text="${errorMessage}" style="color:red;"></p>
+</div>
+
+<div>
+  <a th:if="${!showCompleted}"
+     th:href="@{/ui/vet/appointments(showCompleted=true)}">Show completed</a>
+  <a th:if="${showCompleted}"
+     th:href="@{/ui/vet/appointments(showCompleted=false)}">Hide completed</a>
+</div>
+
+<!-- Πίνακας ραντεβού -->
+<table border="1" th:if="${appointments != null && !appointments.isEmpty()}">
+  <tr>
+    <th>Pet</th>
+    <th>Start</th>
+    <th>End</th>
+    <th>Status</th>
+    <th>Actions</th>
+  </tr>
+  <tr th:each="a : ${appointments}">
+    <td th:text="${a.petName}">Pet</td>
+    <td th:text="${a.startTime}">Start</td>
+    <td th:text="${a.endTime}">End</td>
+    <td th:text="${a.status}">Status</td>
+    <td>
+      <!-- Confirm μόνο όταν είναι PENDING -->
+      <form th:if="${a.status != null and a.status.toString() == 'PENDING'}"
+            th:action="@{|/ui/vet/appointments/${a.id}/confirm|}"
+            method="post"
+            style="display:inline">
+        <button type="submit">Confirm</button>
+      </form>
+
+      <!-- Cancel όταν είναι PENDING ή CONFIRMED -->
+      <form th:if="${a.status != null and (a.status.toString() == 'PENDING' or a.status.toString() == 'CONFIRMED')}"
+            th:action="@{|/ui/vet/appointments/${a.id}/cancel|}"
+            method="post"
+            style="display:inline">
+        <button type="submit">Cancel</button>
+      </form>
+    </td>
+  </tr>
+</table>
+
+<div th:if="${appointments == null || appointments.isEmpty()}">
+  <p>No appointments found.</p>
+</div>
+
+<button type="button" onclick="location.href='/ui/vet/home'">
+  Back to Vet Dashboard
+</button>
+
+</body>
+</html>

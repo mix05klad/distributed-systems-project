@@ -55,7 +55,6 @@ public class OwnerAppointmentController {
             form = new CreateAppointmentRequest();
         }
 
-        // Αν ήρθαμε με ?vetId=..., προεπιλογή του vet στη φόρμα
         if (vetId != null) {
             form.setVetId(vetId);
         }
@@ -108,7 +107,7 @@ public class OwnerAppointmentController {
         // Pets του ιδιοκτήτη
         model.addAttribute("pets", petService.getPetsForOwner(ownerId));
 
-        // Όλοι οι χρήστες με ρόλο VET
+        // Όλοι οι VET
         List<User> vets = userRepository.findAll().stream()
                 .filter(u -> u.getRoles().stream().anyMatch(r -> r.equalsIgnoreCase("VET")))
                 .toList();
