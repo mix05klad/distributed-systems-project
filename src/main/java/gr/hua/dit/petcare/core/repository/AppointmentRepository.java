@@ -1,6 +1,8 @@
 package gr.hua.dit.petcare.core.repository;
 
 import gr.hua.dit.petcare.core.model.Appointment;
+import gr.hua.dit.petcare.core.model.AppointmentStatus;
+import gr.hua.dit.petcare.core.model.VisitType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -45,4 +47,11 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
         order by a.startTime desc
     """)
     List<Appointment> findAllByVetId(@Param("vetId") Long vetId);
+
+    // τελευταίο COMPLETED ραντεβού συγκεκριμένου τύπου (VACCINE) για pet
+    Appointment findTopByPetIdAndVisitTypeAndStatusOrderByStartTimeDesc(
+            Long petId,
+            VisitType visitType,
+            AppointmentStatus status
+    );
 }

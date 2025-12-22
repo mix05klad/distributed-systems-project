@@ -4,6 +4,7 @@ import gr.hua.dit.petcare.core.model.Appointment;
 import gr.hua.dit.petcare.core.model.AppointmentStatus;
 import gr.hua.dit.petcare.core.model.Pet;
 import gr.hua.dit.petcare.core.model.User;
+import gr.hua.dit.petcare.core.model.VisitType;
 import gr.hua.dit.petcare.core.repository.AppointmentRepository;
 import gr.hua.dit.petcare.core.repository.PetRepository;
 import gr.hua.dit.petcare.core.repository.UserRepository;
@@ -16,11 +17,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
 @Transactional
 public class AppointmentServiceImpl implements AppointmentService {
+
+    private static final long MIN_DAYS_BETWEEN_VACCINES = 20;
 
     private final AppointmentRepository ar;
     private final PetRepository pr;
@@ -78,6 +82,27 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new IllegalStateException("Vet already has an appointment in this time range");
         }
 
+        // Ειδικός έλεγχος μόνο για ραντεβού τύπου VACCINE
+        if (req.getVisitType() == VisitType.VACCINE) {
+            Appointment lastVaccine = ar.findTopByPetIdAndVisitTypeAndStatusOrderByStartTimeDesc(
+                    pet.getId(),
+                    VisitType.VACCINE,
+                    AppointmentStatus.COMPLETED
+            );
+
+            if (lastVaccine != null) {
+                long daysBetween = ChronoUnit.DAYS.between(
+                        lastVaccine.getStartTime().toLocalDate(),
+                        start.toLocalDate()
+                );
+                if (daysBetween < MIN_DAYS_BETWEEN_VACCINES) {
+                    throw new IllegalStateException(
+                            "This pet had a vaccine " + daysBetween + " days ago. Minimum allowed interval is " + MIN_DAYS_BETWEEN_VACCINES + " days."
+                    );
+                }
+            }
+        }
+
         Appointment a = new Appointment();
         a.setPet(pet);
         a.setVet(vet);
@@ -85,6 +110,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         a.setEndTime(end);
         a.setStatus(AppointmentStatus.PENDING);
         a.setVetNotes(null);
+        a.setVisitType(req.getVisitType());
 
         a = ar.save(a);
 

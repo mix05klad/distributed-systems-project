@@ -3,6 +3,7 @@ package gr.hua.dit.petcare.core.model;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import gr.hua.dit.petcare.core.model.VisitType;
 
 @Entity
 @Table(name = "appointment")
@@ -31,6 +32,11 @@ public class Appointment {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private AppointmentStatus status = AppointmentStatus.PENDING;
+
+    // τύπος επίσκεψης (CHECKUP / VACCINE / TREATMENT)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private VisitType visitType = VisitType.CHECKUP;
 
     // σημειώσεις κτηνιάτρου για κατοικίδιο
     @Column(length = 500)
@@ -102,6 +108,10 @@ public class Appointment {
         return createdAt;
     }
 
+    public VisitType getVisitType() {
+        return visitType;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -132,5 +142,9 @@ public class Appointment {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public void setVisitType(VisitType visitType) {
+        this.visitType = visitType;
     }
 }

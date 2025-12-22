@@ -1,5 +1,6 @@
 package gr.hua.dit.petcare.service.model;
 
+import gr.hua.dit.petcare.core.model.VisitType;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -20,6 +21,9 @@ public class CreateAppointmentRequest {
     @NotNull
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime endTime;
+
+    @NotNull
+    private VisitType visitType;
 
     public Long getPetId() {
         return petId;
@@ -51,5 +55,13 @@ public class CreateAppointmentRequest {
 
     public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
+    }
+
+    public VisitType getVisitType() {
+        return visitType;
+    }
+
+    public void setVisitType(VisitType visitType) {
+        this.visitType = visitType;
     }
 }

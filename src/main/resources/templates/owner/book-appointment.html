@@ -13,7 +13,6 @@
   <p th:text="${successMessage}" style="color:green;"></p>
 </div>
 
-<!-- Business / validation error -->
 <div th:if="${errorMessage}">
   <p th:text="${errorMessage}" style="color:red;"></p>
 </div>
@@ -46,8 +45,7 @@
               th:selected="${appointmentForm.vetId == null}">-- Select vet --</option>
       <option th:each="v : ${vets}"
               th:value="${v.id}"
-              th:text="${v.fullName}">
-      </option>
+              th:text="${v.fullName}"></option>
     </select>
     <div th:if="${#fields.hasErrors('vetId')}"
          th:errors="*{vetId}" style="color:red;"></div>
@@ -71,6 +69,22 @@
     <p th:if="${selectedVetAvailability.isEmpty()}">
       This vet has no declared availability.
     </p>
+  </div>
+
+  <!-- Visit type -->
+  <div>
+    <label>Visit type</label>
+    <select th:field="*{visitType}">
+      <option value="" disabled
+              th:selected="${appointmentForm.visitType == null}">
+        -- Select visit type --
+      </option>
+      <option th:each="t : ${T(gr.hua.dit.petcare.core.model.VisitType).values()}"
+              th:value="${t}"
+              th:text="${t}"></option>
+    </select>
+    <div th:if="${#fields.hasErrors('visitType')}"
+         th:errors="*{visitType}" style="color:red;"></div>
   </div>
 
   <!-- Start -->

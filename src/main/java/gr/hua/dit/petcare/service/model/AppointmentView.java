@@ -1,6 +1,7 @@
 package gr.hua.dit.petcare.service.model;
 
 import gr.hua.dit.petcare.core.model.AppointmentStatus;
+import gr.hua.dit.petcare.core.model.VisitType;
 
 import java.time.LocalDateTime;
 
@@ -20,6 +21,8 @@ public class AppointmentView {
     private AppointmentStatus status;
 
     private String vetNotes;
+
+    private VisitType visitType;
 
     public Long getId() {
         return id;
@@ -91,5 +94,13 @@ public class AppointmentView {
 
     public void setVetNotes(String vetNotes) {
         this.vetNotes = vetNotes;
+    }
+
+    public VisitType getVisitType() {
+        return visitType;
+    }
+
+    public void setVisitType(VisitType visitType) {
+        this.visitType = visitType;
     }
 }

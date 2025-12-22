@@ -6,6 +6,7 @@ import gr.hua.dit.petcare.core.model.Pet;
 import gr.hua.dit.petcare.core.model.PetType;
 import gr.hua.dit.petcare.core.model.User;
 import gr.hua.dit.petcare.core.model.VetAvailability;
+import gr.hua.dit.petcare.core.model.VisitType;
 import gr.hua.dit.petcare.core.repository.AppointmentRepository;
 import gr.hua.dit.petcare.core.repository.PetRepository;
 import gr.hua.dit.petcare.core.repository.UserRepository;
@@ -42,7 +43,7 @@ public class DataInitializer {
             User owner1 = new User();
             owner1.setUsername("owner1");
             owner1.setPassword(passwordEncoder.encode("owner1pass")); // login: owner1 / owner1pass
-            owner1.setFullName("Demo Owner One");
+            owner1.setFullName("Michael Kladis");
             owner1.setEmail("owner1@example.com");
             owner1.setPhoneNumber("2100000001");
             owner1.setRoles(Set.of(Role.OWNER.name()));
@@ -51,7 +52,7 @@ public class DataInitializer {
             User owner2 = new User();
             owner2.setUsername("owner2");
             owner2.setPassword(passwordEncoder.encode("owner2pass")); // login: owner2 / owner2pass
-            owner2.setFullName("Demo Owner Two");
+            owner2.setFullName("Chris Filip");
             owner2.setEmail("owner2@example.com");
             owner2.setPhoneNumber("2100000002");
             owner2.setRoles(Set.of(Role.OWNER.name()));
@@ -60,7 +61,7 @@ public class DataInitializer {
             User owner3 = new User();
             owner3.setUsername("owner3");
             owner3.setPassword(passwordEncoder.encode("owner3pass")); // login: owner3 / owner3pass
-            owner3.setFullName("Demo Owner Three");
+            owner3.setFullName("Touloumi Dimitra");
             owner3.setEmail("owner3@example.com");
             owner3.setPhoneNumber("2100000003");
             owner3.setRoles(Set.of(Role.OWNER.name()));
@@ -70,7 +71,7 @@ public class DataInitializer {
             User vet1 = new User();
             vet1.setUsername("vet1");
             vet1.setPassword(passwordEncoder.encode("vet1pass")); // login: vet1 / vet1pass
-            vet1.setFullName("Demo Vet One");
+            vet1.setFullName("Lia Papadopoulou");
             vet1.setEmail("vet1@example.com");
             vet1.setPhoneNumber("2100000101");
             vet1.setRoles(Set.of(Role.VET.name()));
@@ -79,13 +80,11 @@ public class DataInitializer {
             User vet2 = new User();
             vet2.setUsername("vet2");
             vet2.setPassword(passwordEncoder.encode("vet2pass")); // login: vet2 / vet2pass
-            vet2.setFullName("Demo Vet Two");
+            vet2.setFullName("Tasos Kastanis");
             vet2.setEmail("vet2@example.com");
             vet2.setPhoneNumber("2100000102");
             vet2.setRoles(Set.of(Role.VET.name()));
             vet2 = userRepository.save(vet2);
-
-
 
             // 2. Pets
 
@@ -148,7 +147,7 @@ public class DataInitializer {
 
             // 4. Ραντεβού (Appointments)
 
-            // Ραντεβού 1: Rex με vet1 αύριο 09:00–10:00 (μέσα στο v1Slot1)
+            // Ραντεβού 1: Rex με vet1 αύριο 09:00–10:00 (CONFIRMED)
             LocalDateTime ap1Start = LocalDateTime.of(today.plusDays(1), LocalTime.of(9, 0));
             LocalDateTime ap1End   = LocalDateTime.of(today.plusDays(1), LocalTime.of(10, 0));
 
@@ -158,10 +157,11 @@ public class DataInitializer {
             ap1.setStartTime(ap1Start);
             ap1.setEndTime(ap1End);
             ap1.setStatus(AppointmentStatus.CONFIRMED);
+            ap1.setVisitType(VisitType.TREATMENT);
             ap1.setVetNotes(null);
             appointmentRepository.save(ap1);
 
-            // Ραντεβού 2: Bella με vet1 αύριο 11:00–12:00 (μέσα στο v1Slot1)
+            // Ραντεβού 2: Bella με vet1 αύριο 11:00–12:00 (VACCINE, PENDING)
             LocalDateTime ap2Start = LocalDateTime.of(today.plusDays(1), LocalTime.of(11, 0));
             LocalDateTime ap2End   = LocalDateTime.of(today.plusDays(1), LocalTime.of(12, 0));
 
@@ -171,10 +171,11 @@ public class DataInitializer {
             ap2.setStartTime(ap2Start);
             ap2.setEndTime(ap2End);
             ap2.setStatus(AppointmentStatus.PENDING);
+            ap2.setVisitType(VisitType.VACCINE);
             ap2.setVetNotes(null);
             appointmentRepository.save(ap2);
 
-            // Ραντεβού 3: Max με vet2 μεθαύριο 10:30–11:30 (μέσα στο v2Slot1)
+            // Ραντεβού 3: Max με vet2 μεθαύριο 10:30–11:30 (PENDING)
             LocalDateTime ap3Start = LocalDateTime.of(today.plusDays(2), LocalTime.of(10, 30));
             LocalDateTime ap3End   = LocalDateTime.of(today.plusDays(2), LocalTime.of(11, 30));
 
@@ -184,6 +185,7 @@ public class DataInitializer {
             ap3.setStartTime(ap3Start);
             ap3.setEndTime(ap3End);
             ap3.setStatus(AppointmentStatus.PENDING);
+            ap3.setVisitType(VisitType.CHECKUP);
             ap3.setVetNotes(null);
             appointmentRepository.save(ap3);
         };
