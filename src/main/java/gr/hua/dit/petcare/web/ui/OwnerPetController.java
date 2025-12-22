@@ -1,5 +1,6 @@
 package gr.hua.dit.petcare.web.ui;
 
+import gr.hua.dit.petcare.core.model.VisitType;
 import gr.hua.dit.petcare.security.ApplicationUserDetails;
 import gr.hua.dit.petcare.service.AppointmentService;
 import gr.hua.dit.petcare.service.PetService;
@@ -69,6 +70,7 @@ public class OwnerPetController {
     @GetMapping("/pet-history")
     public String viewPetHistory(
             @RequestParam(name = "petId", required = false) Long petId,
+            @RequestParam(name = "visitType", required = false) VisitType visitType,
             Model model) {
 
         Long ownerId = getCurrentUserId();
@@ -77,18 +79,48 @@ public class OwnerPetController {
         List<PetView> pets = petService.getPetsForOwner(ownerId);
         model.addAttribute("pets", pets);
         model.addAttribute("selectedPetId", petId);
+        model.addAttribute("selectedVisitType", visitType);
+
+        String selectedPetName = null;
+        Integer selectedPetAge = null;
+        String selectedPetType = null;
 
         List<AppointmentView> history = Collections.emptyList();
 
         if (petId != null) {
             try {
                 history = appointmentService.getPetHistory(petId, ownerId);
+
+                // βρίσκουμε ποιο pet έχει επιλεγεί για εμφάνιση info
+                for (PetView p : pets) {
+                    if (p.getId().equals(petId)) {
+                        selectedPetName = p.getName();
+                        selectedPetAge = p.getAge();
+                        selectedPetType = p.getType() != null ? p.getType().name() : null;
+                        break;
+                    }
+                }
+
+                // αν υπάρχει φίλτρο visitType, φιλτράρουμε στη μνήμη
+                if (visitType != null) {
+                    history = history.stream()
+                            .filter(h -> h.getVisitType() != null && h.getVisitType() == visitType)
+                            .toList();
+                }
+
             } catch (IllegalArgumentException | AccessDeniedException ex) {
                 model.addAttribute("errorMessage", ex.getMessage());
             }
         }
 
         model.addAttribute("history", history);
+        model.addAttribute("historyCount", history.size());
+        model.addAttribute("selectedPetName", selectedPetName);
+        model.addAttribute("selectedPetAge", selectedPetAge);
+        model.addAttribute("selectedPetType", selectedPetType);
+
+        // για το dropdown των visit types
+        model.addAttribute("allVisitTypes", VisitType.values());
 
         return "owner/pet-history";
     }

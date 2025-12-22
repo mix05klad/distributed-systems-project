@@ -26,11 +26,46 @@
               th:selected="${selectedPetId != null and selectedPetId == p.id}">
       </option>
     </select>
+  </div>
+
+  <div>
+    <label>Visit type</label>
+    <select name="visitType">
+      <option value="" th:selected="${selectedVisitType == null}">
+        All types
+      </option>
+      <option th:each="t : ${allVisitTypes}"
+              th:value="${t}"
+              th:text="${t}"
+              th:selected="${selectedVisitType != null and selectedVisitType == t}">
+      </option>
+    </select>
+  </div>
+
+  <div>
     <button type="submit">Show history</button>
   </div>
 </form>
 
 <hr/>
+
+<!-- Card με βασικά στοιχεία pet -->
+<div th:if="${selectedPetId != null && selectedPetName != null}"
+     style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
+  <h3 th:text="${selectedPetName}">Pet name</h3>
+  <p>
+    <span>Type: </span>
+    <span th:text="${selectedPetType != null ? selectedPetType : 'N/A'}">type</span>
+  </p>
+  <p>
+    <span>Age: </span>
+    <span th:text="${selectedPetAge != null ? selectedPetAge : 'N/A'}">age</span>
+  </p>
+  <p>
+    <span>Total completed visits: </span>
+    <span th:text="${historyCount}">0</span>
+  </p>
+</div>
 
 <div th:if="${history != null and !history.isEmpty()}">
   <table border="1">
@@ -42,17 +77,21 @@
       <th>Notes</th>
     </tr>
     <tr th:each="a : ${history}">
-      <td th:text="${a.startTime}">date</td>
+      <td th:text="${#temporals.format(a.startTime, 'dd/MM/yyyy HH:mm')}">date</td>
       <td th:text="${a.vetName}">vet</td>
       <td th:text="${a.visitType}">type</td>
       <td th:text="${a.status}">status</td>
-      <td th:text="${a.vetNotes}">notes</td>
+      <td th:text="${a.vetNotes != null ? a.vetNotes : ''}">notes</td>
     </tr>
   </table>
 </div>
 
-<div th:if="${history == null or history.isEmpty()}">
-  <p>No completed visits for this pet yet.</p>
+<div th:if="${selectedPetId != null and (history == null or history.isEmpty())}">
+  <p>No completed visits for this pet yet (with the selected filter).</p>
+</div>
+
+<div th:if="${selectedPetId == null}">
+  <p>Please select a pet to view its medical history.</p>
 </div>
 
 <p>
