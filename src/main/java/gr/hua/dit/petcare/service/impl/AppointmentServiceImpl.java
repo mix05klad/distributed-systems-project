@@ -13,6 +13,7 @@ import gr.hua.dit.petcare.service.AppointmentService;
 import gr.hua.dit.petcare.service.mapper.AppointmentMapper;
 import gr.hua.dit.petcare.service.model.AppointmentView;
 import gr.hua.dit.petcare.service.model.CreateAppointmentRequest;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -218,4 +219,20 @@ public class AppointmentServiceImpl implements AppointmentService {
         return mapper.toView(a);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<AppointmentView> getPetHistory(Long petId, Long ownerId) {
+        // έλεγχος ιδιοκτησίας pet
+        Pet pet = pr.findById(petId)
+                .orElseThrow(() -> new IllegalArgumentException("Pet not found: " + petId));
+
+        if (!pet.getOwner().getId().equals(ownerId)) {
+            throw new AccessDeniedException("You are not the owner of this pet");
+        }
+
+        return ar.findCompletedByPetAndOwner(ownerId, petId)
+                .stream()
+                .map(mapper::toView)
+                .toList();
+    }
 }

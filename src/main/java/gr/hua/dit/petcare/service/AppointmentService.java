@@ -17,5 +17,6 @@ public interface AppointmentService {
 
     AppointmentView updateVisitNotes(Long appointmentId, Long vetId, String notes);
 
-}
 
+    List<AppointmentView> getPetHistory(Long petId, Long ownerId);
+}

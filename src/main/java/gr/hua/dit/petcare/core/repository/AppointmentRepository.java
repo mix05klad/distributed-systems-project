@@ -54,4 +54,18 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             VisitType visitType,
             AppointmentStatus status
     );
+
+    // completed επισκέψεις (ιστορικό) για συγκεκριμένο pet ενός owner
+    @Query("""
+        select a
+        from Appointment a
+        where a.pet.id = :petId
+          and a.pet.owner.id = :ownerId
+          and a.status = gr.hua.dit.petcare.core.model.AppointmentStatus.COMPLETED
+        order by a.startTime desc
+    """)
+    List<Appointment> findCompletedByPetAndOwner(
+            @Param("ownerId") Long ownerId,
+            @Param("petId") Long petId
+    );
 }

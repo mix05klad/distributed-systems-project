@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="el">
+<head>
+  <meta charset="UTF-8">
+  <title>Pet Medical History</title>
+</head>
+<body>
+
+<h2>Pet Medical History</h2>
+
+<div th:if="${errorMessage}">
+  <p th:text="${errorMessage}" style="color:red;"></p>
+</div>
+
+<form th:action="@{/ui/owner/pet-history}" method="get">
+  <div>
+    <label>Pet</label>
+    <select name="petId">
+      <option value="" disabled
+              th:selected="${selectedPetId == null}">
+        -- Select pet --
+      </option>
+      <option th:each="p : ${pets}"
+              th:value="${p.id}"
+              th:text="${p.name}"
+              th:selected="${selectedPetId != null and selectedPetId == p.id}">
+      </option>
+    </select>
+    <button type="submit">Show history</button>
+  </div>
+</form>
+
+<hr/>
+
+<div th:if="${history != null and !history.isEmpty()}">
+  <table border="1">
+    <tr>
+      <th>Date / Time</th>
+      <th>Vet</th>
+      <th>Visit type</th>
+      <th>Status</th>
+      <th>Notes</th>
+    </tr>
+    <tr th:each="a : ${history}">
+      <td th:text="${a.startTime}">date</td>
+      <td th:text="${a.vetName}">vet</td>
+      <td th:text="${a.visitType}">type</td>
+      <td th:text="${a.status}">status</td>
+      <td th:text="${a.vetNotes}">notes</td>
+    </tr>
+  </table>
+</div>
+
+<div th:if="${history == null or history.isEmpty()}">
+  <p>No completed visits for this pet yet.</p>
+</div>
+
+<p>
+  <button type="button" onclick="location.href='/ui/owner/home'">
+    Back to Dashboard
+  </button>
+</p>
+
+</body>
+</html>
