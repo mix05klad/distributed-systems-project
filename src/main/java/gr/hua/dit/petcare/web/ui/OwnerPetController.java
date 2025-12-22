@@ -53,7 +53,7 @@ public class OwnerPetController {
             Model model) {
 
         if (bindingResult.hasErrors()) {
-            return "owner/register-pet"; // ΟΧΙ REDIRECT
+            return "owner/register-pet";
         }
 
         Long ownerId = getCurrentUserId();
@@ -91,7 +91,6 @@ public class OwnerPetController {
             try {
                 history = appointmentService.getPetHistory(petId, ownerId);
 
-                // βρίσκουμε ποιο pet έχει επιλεγεί για εμφάνιση info
                 for (PetView p : pets) {
                     if (p.getId().equals(petId)) {
                         selectedPetName = p.getName();
@@ -101,7 +100,6 @@ public class OwnerPetController {
                     }
                 }
 
-                // αν υπάρχει φίλτρο visitType, φιλτράρουμε στη μνήμη
                 if (visitType != null) {
                     history = history.stream()
                             .filter(h -> h.getVisitType() != null && h.getVisitType() == visitType)
@@ -125,7 +123,6 @@ public class OwnerPetController {
         return "owner/pet-history";
     }
 
-    // -------------------- helper --------------------
 
     private Long getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
