@@ -1,14 +1,13 @@
 package gr.hua.dit.petcare.web.ui;
 
 import gr.hua.dit.petcare.core.model.User;
-import gr.hua.dit.petcare.core.model.VetAvailability;
-import gr.hua.dit.petcare.core.repository.UserRepository;
-import gr.hua.dit.petcare.core.repository.VetAvailabilityRepository;
 import gr.hua.dit.petcare.security.ApplicationUserDetails;
 import gr.hua.dit.petcare.service.AppointmentService;
 import gr.hua.dit.petcare.service.PetService;
 import gr.hua.dit.petcare.service.model.AppointmentView;
 import gr.hua.dit.petcare.service.model.CreateAppointmentRequest;
+import gr.hua.dit.petcare.service.model.VetFreeSlotView;
+import gr.hua.dit.petcare.core.repository.UserRepository;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -29,16 +28,13 @@ public class OwnerAppointmentController {
     private final AppointmentService appointmentService;
     private final PetService petService;
     private final UserRepository userRepository;
-    private final VetAvailabilityRepository vetAvailabilityRepository;
 
     public OwnerAppointmentController(AppointmentService appointmentService,
                                       PetService petService,
-                                      UserRepository userRepository,
-                                      VetAvailabilityRepository vetAvailabilityRepository) {
+                                      UserRepository userRepository) {
         this.appointmentService = appointmentService;
         this.petService = petService;
         this.userRepository = userRepository;
-        this.vetAvailabilityRepository = vetAvailabilityRepository;
     }
 
     // Φόρμα κράτησης ραντεβού + λίστα ραντεβού ιδιοκτήτη
@@ -121,11 +117,13 @@ public class OwnerAppointmentController {
 
     private void populateSelectedVetAvailability(Model model, Long vetId) {
         if (vetId == null) {
+            model.addAttribute("selectedVetAvailability", null);
             return;
         }
-        List<VetAvailability> slots =
-                vetAvailabilityRepository.findByVetIdOrderByStartTimeAsc(vetId);
-        model.addAttribute("selectedVetAvailability", slots);
+
+        // Πραγματικά ελεύθερα slots (διαθεσιμότητα - ραντεβού)
+        List<VetFreeSlotView> freeSlots = appointmentService.getFreeSlotsForVet(vetId);
+        model.addAttribute("selectedVetAvailability", freeSlots);
     }
 
     private Long getCurrentUserId(Authentication authentication) {

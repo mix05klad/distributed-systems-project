@@ -16,7 +16,12 @@ import gr.hua.dit.petcare.service.model.CreateAppointmentRequest;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import gr.hua.dit.petcare.core.model.VetAvailability;
+import gr.hua.dit.petcare.core.repository.VetAvailabilityRepository;
+import gr.hua.dit.petcare.service.model.VetFreeSlotView;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -235,4 +240,92 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .map(mapper::toView)
                 .toList();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<VetFreeSlotView> getFreeSlotsForVet(Long vetId) {
+
+        List<VetFreeSlotView> result = new ArrayList<>();
+
+        // Όλες οι δηλωμένες διαθεσιμότητες του vet
+        List<VetAvailability> slots =
+                vetAvailabilityRepository.findByVetIdOrderByStartTimeAsc(vetId);
+
+        for (VetAvailability s : slots) {
+            LocalDateTime slotStart = s.getStartTime();
+            LocalDateTime slotEnd   = s.getEndTime();
+
+            // Όλα τα PENDING/CONFIRMED ραντεβού που πέφτουν μέσα στο slot
+            List<Appointment> conflicts =
+                    ar.findOverlappingAppointments(vetId, slotStart, slotEnd);
+
+            conflicts.sort(Comparator.comparing(Appointment::getStartTime));
+
+            // Ξεκινάμε με το πλήρες slot ως "ελεύθερο"
+            List<TimeSegment> freeSegments = new ArrayList<>();
+            freeSegments.add(new TimeSegment(slotStart, slotEnd));
+
+            // Αφαιρούμε τα κομμάτια που καταλαμβάνουν τα ραντεβού
+            for (Appointment ap : conflicts) {
+                LocalDateTime aStart = ap.getStartTime();
+                LocalDateTime aEnd   = ap.getEndTime();
+
+                List<TimeSegment> updated = new ArrayList<>();
+
+                for (TimeSegment seg : freeSegments) {
+                    LocalDateTime fStart = seg.start;
+                    LocalDateTime fEnd   = seg.end;
+
+                    if (aEnd.isBefore(fStart) || !aStart.isBefore(fEnd)) {
+                        updated.add(seg);
+                        continue;
+                    }
+
+                    if (!aStart.isAfter(fStart) && !aEnd.isBefore(fEnd)) {
+                        continue;
+                    }
+
+                    if (!aStart.isAfter(fStart) && aEnd.isBefore(fEnd)) {
+                        updated.add(new TimeSegment(aEnd, fEnd));
+                        continue;
+                    }
+
+                    if (aStart.isAfter(fStart) && !aEnd.isBefore(fEnd)) {
+                        updated.add(new TimeSegment(fStart, aStart));
+                        continue;
+                    }
+
+                    if (aStart.isAfter(fStart) && aEnd.isBefore(fEnd)) {
+                        updated.add(new TimeSegment(fStart, aStart));
+                        updated.add(new TimeSegment(aEnd, fEnd));
+                    }
+                }
+
+                freeSegments = updated;
+            }
+
+            LocalDateTime now = LocalDateTime.now();
+            for (TimeSegment seg : freeSegments) {
+                LocalDateTime start = seg.start.isBefore(now) ? now : seg.start;
+                LocalDateTime end   = seg.end;
+
+                if (end.isAfter(start)) {
+                    result.add(new VetFreeSlotView(start, end));
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private static class TimeSegment {
+        private final LocalDateTime start;
+        private final LocalDateTime end;
+
+        private TimeSegment(LocalDateTime start, LocalDateTime end) {
+            this.start = start;
+            this.end = end;
+        }
+    }
+
 }

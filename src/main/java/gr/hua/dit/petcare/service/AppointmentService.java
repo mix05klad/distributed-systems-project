@@ -2,6 +2,8 @@ package gr.hua.dit.petcare.service;
 
 import gr.hua.dit.petcare.service.model.AppointmentView;
 import gr.hua.dit.petcare.service.model.CreateAppointmentRequest;
+import gr.hua.dit.petcare.service.model.VetFreeSlotView;
+
 
 import java.util.List;
 
@@ -19,4 +21,6 @@ public interface AppointmentService {
 
 
     List<AppointmentView> getPetHistory(Long petId, Long ownerId);
+    List<VetFreeSlotView> getFreeSlotsForVet(Long vetId);
+
 }
