@@ -25,23 +25,26 @@
 
   <div>
     <label>Email</label>
-    <input th:field="*{email}" />
+    <input th:field="*{email}" required />
   </div>
 
   <div>
     <label>Phone</label>
-    <input th:field="*{phoneNumber}" />
+    <input th:field="*{phoneNumber}" required />
   </div>
 
   <div>
     <label>Role</label>
-    <select th:field="*{role}">
+    <select th:field="*{role}" required>
+      <option value="" disabled selected>Select role</option>
       <option value="OWNER">Owner</option>
       <option value="VET">Vet</option>
     </select>
   </div>
 
   <button type="submit">Register</button>
+  <button type="button" onclick="location.href='/'">Back</button>
+
 </form>
 
 </body>

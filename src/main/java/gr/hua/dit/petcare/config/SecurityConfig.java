@@ -46,10 +46,10 @@ public class SecurityConfig {
     public SecurityFilterChain mvcSecurity(HttpSecurity http) throws Exception {
 
         http
-                .securityMatcher("/", "/login", "/register", "/ui/**", "/css/**", "/js/**")
+                .securityMatcher("/", "/login", "/register", "/ui/**", "/css/**", "/js/**", "/logout")
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login", "/register", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/logout").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -59,7 +59,7 @@ public class SecurityConfig {
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/login?logout")
+                        .logoutSuccessUrl("/")   // <-- root URL index.html
                         .permitAll()
                 );
 
