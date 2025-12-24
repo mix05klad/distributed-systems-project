@@ -19,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 import gr.hua.dit.petcare.core.model.VetAvailability;
 import gr.hua.dit.petcare.core.repository.VetAvailabilityRepository;
 import gr.hua.dit.petcare.service.model.VetFreeSlotView;
+import gr.hua.dit.petcare.noc.NocNotificationService;
+
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -37,17 +39,20 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final UserRepository ur;
     private final AppointmentMapper mapper;
     private final VetAvailabilityRepository vetAvailabilityRepository;
+    private final NocNotificationService nocNotificationService;
 
     public AppointmentServiceImpl(AppointmentRepository ar,
                                   PetRepository pr,
                                   UserRepository ur,
                                   AppointmentMapper mapper,
-                                  VetAvailabilityRepository vetAvailabilityRepository) {
+                                  VetAvailabilityRepository vetAvailabilityRepository,
+                                  NocNotificationService nocNotificationService) {
         this.ar = ar;
         this.pr = pr;
         this.ur = ur;
         this.mapper = mapper;
         this.vetAvailabilityRepository = vetAvailabilityRepository;
+        this.nocNotificationService = nocNotificationService;
     }
 
     @Override
@@ -138,6 +143,13 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         a.setStatus(AppointmentStatus.CONFIRMED);
         a = ar.save(a);
+
+        // Στέλνει SMS στον ιδιοκτήτη
+        try {
+            nocNotificationService.notifyOwnerAppointmentConfirmed(a);
+        } catch (Exception ex) {
+            // δεν ρίχνουμε exception
+        }
 
         return mapper.toView(a);
     }

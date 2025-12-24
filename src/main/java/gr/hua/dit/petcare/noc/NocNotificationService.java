@@ -1,0 +1,120 @@
+package gr.hua.dit.petcare.noc;
+
+import gr.hua.dit.petcare.core.model.Appointment;
+import gr.hua.dit.petcare.core.model.User;
+import gr.hua.dit.petcare.noc.model.PhoneNumberValidationResult;
+import gr.hua.dit.petcare.noc.model.SendSmsRequest;
+import gr.hua.dit.petcare.noc.model.SendSmsResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.time.format.DateTimeFormatter;
+import java.util.Optional;
+
+@Service
+public class NocNotificationService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(NocNotificationService.class);
+
+    private final RestTemplate restTemplate;
+    private final String nocBaseUrl;
+
+    public NocNotificationService(RestTemplate restTemplate,
+                                  @Value("${noc.base-url}") String nocBaseUrl) {
+        this.restTemplate = restTemplate;
+        this.nocBaseUrl = nocBaseUrl;
+    }
+
+
+     // Επιστρέφει το κανονικοποιημένο τηλέφωνο σε μορφή E.164 (π.χ. +3069...)
+     // Aν είναι έγκυρο σύμφωνα με το NOC, αλλιώς empty.
+
+    public Optional<String> normalizePhone(String rawPhone) {
+        if (rawPhone == null || rawPhone.isBlank()) {
+            return Optional.empty();
+        }
+
+        try {
+            String url = nocBaseUrl + "/api/v1/phone-numbers/{phone}/validations";
+            PhoneNumberValidationResult result =
+                    restTemplate.getForObject(url, PhoneNumberValidationResult.class, rawPhone);
+
+            if (result != null && result.isValid() && result.getE164() != null) {
+                return Optional.of(result.getE164());
+            }
+        } catch (Exception ex) {
+            LOGGER.warn("Error calling NOC phone validation for {}: {}", rawPhone, ex.getMessage());
+        }
+
+        return Optional.empty();
+    }
+
+
+     // Στέλνει SMS μέσω NOC. Αν αποτύχει, απλά log (δεν ρίχνουμε exception).
+
+    public void sendSms(String e164, String content) {
+        try {
+            String url = nocBaseUrl + "/api/v1/sms";
+
+            SendSmsRequest request = new SendSmsRequest();
+            request.setE164(e164);
+            request.setContent(content);
+
+            SendSmsResult response =
+                    restTemplate.postForObject(url, request, SendSmsResult.class);
+
+            if (response == null || !response.isSent()) {
+                LOGGER.warn("SMS not sent successfully to {}", e164);
+            } else {
+                LOGGER.info("SMS successfully sent to {}", e164);
+            }
+
+        } catch (Exception ex) {
+            LOGGER.warn("Error sending SMS to {}: {}", e164, ex.getMessage());
+        }
+    }
+
+
+     // High-level: όταν ένα ραντεβού γίνει CONFIRMED, ειδοποιούμε τον ιδιοκτήτη με SMS.
+
+    public void notifyOwnerAppointmentConfirmed(Appointment appointment) {
+        if (appointment == null || appointment.getPet() == null) {
+            return;
+        }
+        User owner = appointment.getPet().getOwner();
+        if (owner == null) {
+            return;
+        }
+
+        String phone = owner.getPhoneNumber();
+        if (phone == null || phone.isBlank()) {
+            LOGGER.info("Owner {} has no phone number, skipping SMS notification", owner.getUsername());
+            return;
+        }
+
+        Optional<String> e164Opt = normalizePhone(phone);
+        if (e164Opt.isEmpty()) {
+            LOGGER.info("Owner {} phone {} is invalid, skipping SMS", owner.getUsername(), phone);
+            return;
+        }
+
+        String e164 = e164Opt.get();
+
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        String when = appointment.getStartTime() != null
+                ? appointment.getStartTime().format(fmt)
+                : "unknown time";
+
+        String message = String.format(
+                "Your appointment for %s with vet %s on %s was CONFIRMED.",
+                appointment.getPet().getName(),
+                appointment.getVet().getFullName(),
+                when
+        );
+
+        sendSms(e164, message);
+    }
+}
