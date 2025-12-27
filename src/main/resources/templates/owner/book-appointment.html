@@ -135,15 +135,25 @@
 </div>
 
 <script>
-  function onVetChange(selectElem) {
-      const vetId = selectElem.value;
-      if (!vetId) return;
+    function onVetChange(selectElem) {
+        const vetId = selectElem.value;
+        if (!vetId) return;
 
-      const url = new URL(window.location.href);
-      url.searchParams.set('vetId', vetId);
-      // κάνουμε GET στο ίδιο URL με ?vetId=...
-      window.location.href = url.toString();
-  }
+        const url = new URL(window.location.href);
+        url.searchParams.set('vetId', vetId);
+        window.location.href = url.toString();
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const vetSelect = document.getElementById("vetSelect");
+        if (vetSelect && vetSelect.value) {
+            const url = new URL(window.location.href);
+            if (!url.searchParams.has("vetId")) {
+                url.searchParams.set("vetId", vetSelect.value);
+                window.location.replace(url.toString());
+            }
+        }
+    });
 </script>
 
 </body>
