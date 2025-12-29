@@ -251,6 +251,12 @@ public class AppointmentServiceImpl implements AppointmentService {
         a.setVetNotes(notes);
         a = ar.save(a);
 
+        // Ειδοποίηση στον ιδιοκτήτη ότι ενημερώθηκαν τα notes
+        try {
+            nocNotificationService.notifyOwnerVisitNotesUpdated(a);
+        } catch (Exception ex) {
+        }
+
         return mapper.toView(a);
     }
 

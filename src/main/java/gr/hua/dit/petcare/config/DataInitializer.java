@@ -45,7 +45,7 @@ public class DataInitializer {
             owner1.setPassword(passwordEncoder.encode("owner1pass")); // login: owner1 / owner1pass
             owner1.setFullName("Michael Kladis");
             owner1.setEmail("owner1@example.com");
-            owner1.setPhoneNumber("2100000001");
+            owner1.setPhoneNumber("6981078397");
             owner1.setRoles(Set.of(Role.OWNER.name()));
             owner1 = userRepository.save(owner1);
 
@@ -54,7 +54,7 @@ public class DataInitializer {
             owner2.setPassword(passwordEncoder.encode("owner2pass")); // login: owner2 / owner2pass
             owner2.setFullName("Chris Filip");
             owner2.setEmail("owner2@example.com");
-            owner2.setPhoneNumber("2100000002");
+            owner2.setPhoneNumber("6981078397");
             owner2.setRoles(Set.of(Role.OWNER.name()));
             owner2 = userRepository.save(owner2);
 
@@ -63,7 +63,7 @@ public class DataInitializer {
             owner3.setPassword(passwordEncoder.encode("owner3pass")); // login: owner3 / owner3pass
             owner3.setFullName("Touloumi Dimitra");
             owner3.setEmail("owner3@example.com");
-            owner3.setPhoneNumber("2100000003");
+            owner3.setPhoneNumber("6981078397");
             owner3.setRoles(Set.of(Role.OWNER.name()));
             owner3 = userRepository.save(owner3);
 
