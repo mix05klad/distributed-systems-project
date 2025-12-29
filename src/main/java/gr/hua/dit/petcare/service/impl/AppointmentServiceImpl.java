@@ -123,6 +123,12 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         a = ar.save(a);
 
+        // Ειδοποιούμε τον κτηνίατρο ότι υπάρχει νέο αίτημα ραντεβού
+        try {
+            nocNotificationService.notifyVetNewAppointmentRequested(a);
+        } catch (Exception ex) {
+        }
+
         return mapper.toView(a);
     }
 

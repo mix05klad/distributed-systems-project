@@ -73,7 +73,7 @@ public class DataInitializer {
             vet1.setPassword(passwordEncoder.encode("vet1pass")); // login: vet1 / vet1pass
             vet1.setFullName("Lia Papadopoulou");
             vet1.setEmail("vet1@example.com");
-            vet1.setPhoneNumber("2100000101");
+            vet1.setPhoneNumber("6981078397");
             vet1.setRoles(Set.of(Role.VET.name()));
             vet1 = userRepository.save(vet1);
 
@@ -82,7 +82,7 @@ public class DataInitializer {
             vet2.setPassword(passwordEncoder.encode("vet2pass")); // login: vet2 / vet2pass
             vet2.setFullName("Tasos Kastanis");
             vet2.setEmail("vet2@example.com");
-            vet2.setPhoneNumber("2100000102");
+            vet2.setPhoneNumber("6981078397");
             vet2.setRoles(Set.of(Role.VET.name()));
             vet2 = userRepository.save(vet2);
 

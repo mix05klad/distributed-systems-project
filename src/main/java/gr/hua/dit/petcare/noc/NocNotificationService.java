@@ -197,5 +197,49 @@ public class NocNotificationService {
         sendSms(e164, message);
     }
 
+    public void notifyVetNewAppointmentRequested(Appointment appointment) {
+        if (appointment == null || appointment.getVet() == null) {
+            return;
+        }
+
+        User vet = appointment.getVet();
+
+        String phone = vet.getPhoneNumber();
+        if (phone == null || phone.isBlank()) {
+            LOGGER.info("Vet {} has no phone number, skipping SMS notification", vet.getUsername());
+            return;
+        }
+
+        Optional<String> e164Opt = normalizePhone(phone);
+        if (e164Opt.isEmpty()) {
+            LOGGER.info("Vet {} phone {} is invalid, skipping SMS", vet.getUsername(), phone);
+            return;
+        }
+
+        String e164 = e164Opt.get();
+
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        String when = appointment.getStartTime() != null
+                ? appointment.getStartTime().format(fmt)
+                : "unknown time";
+
+        String petName = (appointment.getPet() != null)
+                ? appointment.getPet().getName()
+                : "a pet";
+
+        String ownerName = (appointment.getPet() != null && appointment.getPet().getOwner() != null)
+                ? appointment.getPet().getOwner().getFullName()
+                : "an owner";
+
+        String message = String.format(
+                "New appointment request for %s from %s on %s. Please log in to PetCare to confirm or cancel.",
+                petName,
+                ownerName,
+                when
+        );
+
+        sendSms(e164, message);
+    }
+
 
 }
