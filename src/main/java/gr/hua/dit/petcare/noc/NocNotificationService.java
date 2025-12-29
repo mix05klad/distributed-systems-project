@@ -29,8 +29,8 @@ public class NocNotificationService {
     }
 
 
-     // Επιστρέφει το κανονικοποιημένο τηλέφωνο σε μορφή E.164 (π.χ. +3069...)
-     // Aν είναι έγκυρο σύμφωνα με το NOC, αλλιώς empty.
+    // Επιστρέφει το κανονικοποιημένο τηλέφωνο σε μορφή E.164 (π.χ. +3069...)
+    // Aν είναι έγκυρο σύμφωνα με το NOC, αλλιώς empty.
 
     public Optional<String> normalizePhone(String rawPhone) {
         if (rawPhone == null || rawPhone.isBlank()) {
@@ -53,7 +53,7 @@ public class NocNotificationService {
     }
 
 
-     // Στέλνει SMS μέσω NOC. Αν αποτύχει, απλά log (δεν ρίχνουμε exception).
+    // Στέλνει SMS μέσω NOC. Αν αποτύχει, απλά log (δεν ρίχνουμε exception).
 
     public void sendSms(String e164, String content) {
         try {
@@ -78,7 +78,7 @@ public class NocNotificationService {
     }
 
 
-     // High-level: όταν ένα ραντεβού γίνει CONFIRMED, ειδοποιούμε τον ιδιοκτήτη με SMS.
+    // όταν ένα ραντεβού γίνει CONFIRMED, ειδοποιούμε τον ιδιοκτήτη με SMS.
 
     public void notifyOwnerAppointmentConfirmed(Appointment appointment) {
         if (appointment == null || appointment.getPet() == null) {
@@ -117,4 +117,46 @@ public class NocNotificationService {
 
         sendSms(e164, message);
     }
+
+    // όταν ένα ραντεβού ακυρώνεται από τον κτηνίατρο ειδοποιούμε τον ιδιοκτήτη με SMS.
+    public void notifyOwnerAppointmentCancelledByVet(Appointment appointment) {
+        if (appointment == null || appointment.getPet() == null) {
+            return;
+        }
+        User owner = appointment.getPet().getOwner();
+        if (owner == null) {
+            return;
+        }
+
+        String phone = owner.getPhoneNumber();
+        if (phone == null || phone.isBlank()) {
+            LOGGER.info("Owner {} has no phone number, skipping SMS notification (cancelled)",
+                    owner.getUsername());
+            return;
+        }
+
+        Optional<String> e164Opt = normalizePhone(phone);
+        if (e164Opt.isEmpty()) {
+            LOGGER.info("Owner {} phone {} is invalid, skipping SMS (cancelled)",
+                    owner.getUsername(), phone);
+            return;
+        }
+
+        String e164 = e164Opt.get();
+
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        String when = appointment.getStartTime() != null
+                ? appointment.getStartTime().format(fmt)
+                : "unknown time";
+
+        String message = String.format(
+                "Your appointment for %s with vet %s on %s was CANCELLED by the vet.",
+                appointment.getPet().getName(),
+                appointment.getVet().getFullName(),
+                when
+        );
+
+        sendSms(e164, message);
+    }
+
 }

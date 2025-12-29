@@ -5,27 +5,25 @@ import gr.hua.dit.petcare.core.model.AppointmentStatus;
 import gr.hua.dit.petcare.core.model.Pet;
 import gr.hua.dit.petcare.core.model.User;
 import gr.hua.dit.petcare.core.model.VisitType;
+import gr.hua.dit.petcare.core.model.VetAvailability;
 import gr.hua.dit.petcare.core.repository.AppointmentRepository;
 import gr.hua.dit.petcare.core.repository.PetRepository;
 import gr.hua.dit.petcare.core.repository.UserRepository;
 import gr.hua.dit.petcare.core.repository.VetAvailabilityRepository;
+import gr.hua.dit.petcare.noc.NocNotificationService;
 import gr.hua.dit.petcare.service.AppointmentService;
 import gr.hua.dit.petcare.service.mapper.AppointmentMapper;
 import gr.hua.dit.petcare.service.model.AppointmentView;
 import gr.hua.dit.petcare.service.model.CreateAppointmentRequest;
+import gr.hua.dit.petcare.service.model.VetFreeSlotView;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import gr.hua.dit.petcare.core.model.VetAvailability;
-import gr.hua.dit.petcare.core.repository.VetAvailabilityRepository;
-import gr.hua.dit.petcare.service.model.VetFreeSlotView;
-import gr.hua.dit.petcare.noc.NocNotificationService;
 
-
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -176,6 +174,14 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         a.setStatus(AppointmentStatus.CANCELLED);
         a = ar.save(a);
+
+        //Αν το cancel το έκανε ο vet, αποστολή SMS στον owner
+        if (userId.equals(vetId)) {
+            try {
+                nocNotificationService.notifyOwnerAppointmentCancelledByVet(a);
+            } catch (Exception ex) {
+            }
+        }
 
         return mapper.toView(a);
     }
