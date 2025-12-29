@@ -202,6 +202,12 @@ public class AppointmentServiceImpl implements AppointmentService {
         a.setStatus(AppointmentStatus.COMPLETED);
         a = ar.save(a);
 
+        // SMS στον ιδιοκτήτη ότι το ραντεβού ολοκληρώθηκε
+        try {
+            nocNotificationService.notifyOwnerAppointmentCompleted(a);
+        } catch (Exception ex) {
+        }
+
         return mapper.toView(a);
     }
 
