@@ -4,6 +4,7 @@ import gr.hua.dit.petcare.security.ApplicationUserDetails;
 import gr.hua.dit.petcare.service.AppointmentService;
 import gr.hua.dit.petcare.service.model.AppointmentView;
 import gr.hua.dit.petcare.service.model.CreateAppointmentRequest;
+import gr.hua.dit.petcare.service.model.VisitNotesRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -22,7 +23,7 @@ public class AppointmentRestController {
         this.appointmentService = appointmentService;
     }
 
-    // καταχώρηση νέου ραντεβού
+    // καταχώρηση νέου ραντεβού (OWNER)
     @PostMapping
     public ResponseEntity<AppointmentView> createAppointment(
             @Valid @RequestBody CreateAppointmentRequest request) {
@@ -48,7 +49,7 @@ public class AppointmentRestController {
         return ResponseEntity.ok(list);
     }
 
-    // επιβεβαίωση ραντεβού
+    // επιβεβαίωση ραντεβού (VET)
     @PostMapping("/{id}/confirm")
     public ResponseEntity<AppointmentView> confirmAppointment(@PathVariable Long id) {
         Long vetId = getCurrentUserId();
@@ -56,7 +57,7 @@ public class AppointmentRestController {
         return ResponseEntity.ok(view);
     }
 
-    // ακύρωση ραντεβού
+    // ακύρωση ραντεβού (OWNER ή VET, service κάνει τον έλεγχο)
     @PostMapping("/{id}/cancel")
     public ResponseEntity<AppointmentView> cancelAppointment(@PathVariable Long id) {
         Long userId = getCurrentUserId();
@@ -64,11 +65,22 @@ public class AppointmentRestController {
         return ResponseEntity.ok(view);
     }
 
-    // ολοκλήρωση ραντεβού από τον κτηνίατρο
+    // ολοκλήρωση ραντεβού (VET)
     @PostMapping("/{id}/complete")
     public ResponseEntity<AppointmentView> completeAppointment(@PathVariable Long id) {
         Long vetId = getCurrentUserId();
         AppointmentView view = appointmentService.completeAppointment(id, vetId);
+        return ResponseEntity.ok(view);
+    }
+
+    // καταχώρηση / update visit notes (VET, μόνο σε COMPLETED)
+    @PostMapping("/{id}/notes")
+    public ResponseEntity<AppointmentView> updateVisitNotes(
+            @PathVariable Long id,
+            @Valid @RequestBody VisitNotesRequest request
+    ) {
+        Long vetId = getCurrentUserId();
+        AppointmentView view = appointmentService.updateVisitNotes(id, vetId, request.getNotes());
         return ResponseEntity.ok(view);
     }
 

@@ -1,7 +1,10 @@
 package gr.hua.dit.petcare.web.rest;
 
+import gr.hua.dit.petcare.core.model.VisitType;
 import gr.hua.dit.petcare.security.ApplicationUserDetails;
+import gr.hua.dit.petcare.service.AppointmentService;
 import gr.hua.dit.petcare.service.PetService;
+import gr.hua.dit.petcare.service.model.AppointmentView;
 import gr.hua.dit.petcare.service.model.CreatePetRequest;
 import gr.hua.dit.petcare.service.model.PetView;
 import jakarta.validation.Valid;
@@ -17,9 +20,12 @@ import java.util.List;
 public class PetRestController {
 
     private final PetService petService;
+    private final AppointmentService appointmentService;
 
-    public PetRestController(PetService petService) {
+    public PetRestController(PetService petService,
+                             AppointmentService appointmentService) {
         this.petService = petService;
+        this.appointmentService = appointmentService;
     }
 
     @PostMapping
@@ -36,7 +42,6 @@ public class PetRestController {
         return ResponseEntity.ok(pets);
     }
 
-    // --- ΝΕΑ ---
     @GetMapping("/{id}")
     public ResponseEntity<PetView> getPet(@PathVariable("id") Long id) {
         Long requesterId = getCurrentUserId();
@@ -57,6 +62,24 @@ public class PetRestController {
         Long requesterId = getCurrentUserId();
         petService.deletePet(id, requesterId);
         return ResponseEntity.noContent().build();
+    }
+
+    // Medical history για pet
+    @GetMapping("/{id}/history")
+    public ResponseEntity<List<AppointmentView>> getPetHistory(
+            @PathVariable("id") Long petId,
+            @RequestParam(name = "visitType", required = false) VisitType visitType
+    ) {
+        Long ownerId = getCurrentUserId();
+        List<AppointmentView> history = appointmentService.getPetHistory(petId, ownerId);
+
+        if (visitType != null) {
+            history = history.stream()
+                    .filter(a -> a.getVisitType() != null && a.getVisitType() == visitType)
+                    .toList();
+        }
+
+        return ResponseEntity.ok(history);
     }
 
     private Long getCurrentUserId() {
