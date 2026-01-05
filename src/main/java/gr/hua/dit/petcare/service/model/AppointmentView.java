@@ -4,6 +4,7 @@ import gr.hua.dit.petcare.core.model.AppointmentStatus;
 import gr.hua.dit.petcare.core.model.VisitType;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class AppointmentView {
 
@@ -23,6 +24,9 @@ public class AppointmentView {
     private VisitType visitType;
 
     private String vetNotes;
+
+    private List<String> warnings;
+
 
     public Long getId() {
         return id;
@@ -102,5 +106,13 @@ public class AppointmentView {
 
     public void setVetNotes(String vetNotes) {
         this.vetNotes = vetNotes;
+    }
+
+    public List<String> getWarnings() {
+        return warnings;
+    }
+
+    public void setWarnings(List<String> warnings) {
+        this.warnings = warnings;
     }
 }

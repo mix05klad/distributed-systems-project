@@ -10,6 +10,8 @@ import gr.hua.dit.petcare.core.repository.AppointmentRepository;
 import gr.hua.dit.petcare.core.repository.PetRepository;
 import gr.hua.dit.petcare.core.repository.UserRepository;
 import gr.hua.dit.petcare.core.repository.VetAvailabilityRepository;
+import gr.hua.dit.petcare.holidays.HolidayService;
+import gr.hua.dit.petcare.holidays.model.HolidayDto;
 import gr.hua.dit.petcare.noc.NocNotificationService;
 import gr.hua.dit.petcare.service.AppointmentService;
 import gr.hua.dit.petcare.service.mapper.AppointmentMapper;
@@ -25,6 +27,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -39,18 +42,22 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final VetAvailabilityRepository vetAvailabilityRepository;
     private final NocNotificationService nocNotificationService;
 
+    private final HolidayService holidayService;
+
     public AppointmentServiceImpl(AppointmentRepository ar,
                                   PetRepository pr,
                                   UserRepository ur,
                                   AppointmentMapper mapper,
                                   VetAvailabilityRepository vetAvailabilityRepository,
-                                  NocNotificationService nocNotificationService) {
+                                  NocNotificationService nocNotificationService,
+                                  HolidayService holidayService) {
         this.ar = ar;
         this.pr = pr;
         this.ur = ur;
         this.mapper = mapper;
         this.vetAvailabilityRepository = vetAvailabilityRepository;
         this.nocNotificationService = nocNotificationService;
+        this.holidayService = holidayService;
     }
 
     @Override
@@ -131,7 +138,21 @@ public class AppointmentServiceImpl implements AppointmentService {
             // no-op
         }
 
-        return mapper.toView(a);
+        // Holiday warning (ΔΕΝ απορρίπτει το ραντεβού, θα βγάζει warning)
+        AppointmentView view = mapper.toView(a);
+        try {
+            Optional<HolidayDto> holidayOpt = holidayService.findHoliday(start.toLocalDate());
+            if (holidayOpt.isPresent()) {
+                HolidayDto h = holidayOpt.get();
+                String msg = "Warning: selected date is a public holiday (" +
+                        safe(h.getLocalName()) + " / " + safe(h.getName()) + ").";
+                view.setWarnings(List.of(msg));
+            }
+        } catch (Exception ex) {
+            // no-op
+        }
+
+        return view;
     }
 
     @Override
@@ -348,6 +369,10 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
 
         return result;
+    }
+
+    private String safe(String s) {
+        return (s == null || s.isBlank()) ? "N/A" : s;
     }
 
     private static class TimeSegment {

@@ -13,6 +13,12 @@
     <p th:text="${successMessage}" style="color:green;"></p>
 </div>
 
+<!-- Warning (non-blocking) -->
+<div th:if="${warningMessage}">
+    <p th:text="${warningMessage}"
+       style="color:#856404; background:#fff3cd; border:1px solid #ffeeba; padding:10px;"></p>
+</div>
+
 <div th:if="${errorMessage}">
     <p th:text="${errorMessage}" style="color:red;"></p>
 </div>
@@ -146,7 +152,8 @@
         }
 
         // true αν υπάρχει success ή error μήνυμα στο model
-        var hasMessage = /*[[${successMessage != null or errorMessage != null}]]*/ false;
+        var hasMessage = /*[[${successMessage != null or warningMessage != null or errorMessage != null}]]*/ false;
+
 
         document.addEventListener("DOMContentLoaded", function () {
             // Αν μόλις κάναμε book (ή υπήρξε σφάλμα), ΜΗΝ κάνεις redirect,

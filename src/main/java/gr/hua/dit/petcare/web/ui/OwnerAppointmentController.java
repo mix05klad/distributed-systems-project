@@ -77,9 +77,18 @@ public class OwnerAppointmentController {
         }
 
         try {
-            appointmentService.createAppointment(form, ownerId);
+            AppointmentView created = appointmentService.createAppointment(form, ownerId);
+
             redirectAttributes.addFlashAttribute("successMessage",
                     "Το ραντεβού καταχωρήθηκε (PENDING) και αναμένει επιβεβαίωση από τον κτηνίατρο.");
+
+            if (created.getWarnings() != null && !created.getWarnings().isEmpty()) {
+                // είτε δείξε μόνο το πρώτο:
+                //redirectAttributes.addFlashAttribute("warningMessage", created.getWarnings().get(0));
+
+                redirectAttributes.addFlashAttribute("warningMessage", String.join(" ", created.getWarnings()));
+            }
+
         } catch (IllegalArgumentException | IllegalStateException | SecurityException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
             redirectAttributes.addFlashAttribute("appointmentForm", form);
