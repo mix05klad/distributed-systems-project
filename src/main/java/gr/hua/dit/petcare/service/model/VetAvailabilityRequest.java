@@ -8,11 +8,11 @@ import java.time.LocalDateTime;
 public class VetAvailabilityRequest {
 
     @NotNull
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime startTime;
 
     @NotNull
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime endTime;
 
     public LocalDateTime getStartTime() {
@@ -30,5 +30,4 @@ public class VetAvailabilityRequest {
     public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
     }
-
 }

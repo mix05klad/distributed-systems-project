@@ -1,21 +1,26 @@
 package gr.hua.dit.petcare.service.model;
 
 import gr.hua.dit.petcare.core.model.PetType;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public class CreatePetRequest {
 
-    @NotNull
-    @Size(min = 1, max = 50)
+    @NotBlank(message = "name is required")
+    @Size(max = 50, message = "name must be at most 50 characters")
     private String name;
 
-    @NotNull
+    @NotNull(message = "type is required")
     private PetType type;
 
-    @Size(max = 50)
+    @Size(max = 50, message = "breed must be at most 50 characters")
     private String breed;
 
+    @Min(value = 0, message = "age must be >= 0")
+    @Max(value = 60, message = "age must be <= 60")
     private Integer age;
 
     public String getName() {
@@ -23,7 +28,7 @@ public class CreatePetRequest {
     }
 
     public void setName(String name) {
-        this.name = name;
+        this.name = name != null ? name.trim() : null;
     }
 
     public PetType getType() {
@@ -39,7 +44,7 @@ public class CreatePetRequest {
     }
 
     public void setBreed(String breed) {
-        this.breed = breed;
+        this.breed = breed != null ? breed.trim() : null;
     }
 
     public Integer getAge() {

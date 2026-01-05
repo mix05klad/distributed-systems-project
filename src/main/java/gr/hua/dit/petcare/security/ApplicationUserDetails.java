@@ -65,7 +65,6 @@ public class ApplicationUserDetails implements UserDetails {
         return username;
     }
 
-    // TODO
     @Override
     public boolean isAccountNonExpired() {
         return true;

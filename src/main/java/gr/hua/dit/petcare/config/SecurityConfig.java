@@ -46,10 +46,20 @@ public class SecurityConfig {
     public SecurityFilterChain mvcSecurity(HttpSecurity http) throws Exception {
 
         http
-                .securityMatcher("/", "/login", "/register", "/ui/**", "/css/**", "/js/**", "/logout")
+                .securityMatcher("/", "/login", "/register", "/ui/**", "/css/**", "/js/**", "/images/**", "/logout")
+                // κρατάμε disabled για να μη σπάσουν τα forms σου
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/logout").permitAll()
+                        .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/images/**").permitAll()
+
+                        // Role locks για UI
+                        .requestMatchers("/ui/owner/**").hasRole("OWNER")
+                        .requestMatchers("/ui/vet/**").hasRole("VET")
+                        .requestMatchers("/ui/admin/**").hasRole("ADMIN")
+
+                        // το role redirect θέλει απλά login
+                        .requestMatchers("/ui/role-redirect").authenticated()
+
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -59,13 +69,12 @@ public class SecurityConfig {
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/")   // <-- root URL index.html
+                        .logoutSuccessUrl("/")
                         .permitAll()
                 );
 
         return http.build();
     }
-
 
     @Bean
     @Order(2)
@@ -73,39 +82,30 @@ public class SecurityConfig {
                                            AuthenticationProvider authenticationProvider) throws Exception {
 
         http
+                .securityMatcher(
+                        "/api/**",
+                        "/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/h2-console/**"
+                )
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(restAuthenticationEntryPoint)
-                )
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(restAuthenticationEntryPoint))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html"
-                        ).permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers(
-                                "/",
-                                "/error",
-                                "/css/**",
-                                "/js/**",
-                                "/images/**"
-                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        http.headers(headers ->
-                headers.frameOptions(frameOptions -> frameOptions.disable())
-        );
+        http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
 
         return http.build();
     }
-
 
     @Bean
     public AuthenticationProvider authenticationProvider(PasswordEncoder passwordEncoder,
@@ -127,7 +127,8 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-        configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setAllowCredentials(false);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

@@ -46,8 +46,7 @@ public class VetAvailabilityController {
         Long vetId = getCurrentUserId(authentication);
 
         if (bindingResult.hasErrors()) {
-            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.availabilityForm",
-                    bindingResult);
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.availabilityForm", bindingResult);
             redirectAttributes.addFlashAttribute("availabilityForm", form);
             return "redirect:/ui/vet/availability";
         }
@@ -78,7 +77,10 @@ public class VetAvailabilityController {
     }
 
     private Long getCurrentUserId(Authentication authentication) {
-        ApplicationUserDetails userDetails = (ApplicationUserDetails) authentication.getPrincipal();
-        return userDetails.getId();
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof ApplicationUserDetails details) {
+            return details.getId();
+        }
+        throw new IllegalStateException("No authenticated user");
     }
 }

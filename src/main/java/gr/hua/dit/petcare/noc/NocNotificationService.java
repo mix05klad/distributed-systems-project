@@ -11,8 +11,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class NocNotificationService {
@@ -20,30 +22,48 @@ public class NocNotificationService {
     private static final Logger LOGGER = LoggerFactory.getLogger(NocNotificationService.class);
 
     private final RestTemplate restTemplate;
+
     private final String nocBaseUrl;
+    private final String smsPath;
+    private final String phoneValidationPath;
+    private final long phoneCacheTtlSeconds;
+
+    private final ConcurrentHashMap<String, CachedPhone> phoneCache = new ConcurrentHashMap<>();
+
+    private record CachedPhone(String e164, Instant expiresAt) {}
 
     public NocNotificationService(RestTemplate restTemplate,
-                                  @Value("${noc.base-url}") String nocBaseUrl) {
+                                  @Value("${noc.base-url}") String nocBaseUrl,
+                                  @Value("${noc.sms-path:/api/v1/sms}") String smsPath,
+                                  @Value("${noc.phone-validation-path:/api/v1/phone-numbers/{phone}/validations}") String phoneValidationPath,
+                                  @Value("${noc.phone-cache-ttl-seconds:600}") long phoneCacheTtlSeconds) {
         this.restTemplate = restTemplate;
         this.nocBaseUrl = nocBaseUrl;
+        this.smsPath = smsPath;
+        this.phoneValidationPath = phoneValidationPath;
+        this.phoneCacheTtlSeconds = phoneCacheTtlSeconds;
     }
-
-
-    // Επιστρέφει το κανονικοποιημένο τηλέφωνο σε μορφή E.164 (π.χ. +3069...)
-    // Aν είναι έγκυρο σύμφωνα με το NOC, αλλιώς empty.
 
     public Optional<String> normalizePhone(String rawPhone) {
         if (rawPhone == null || rawPhone.isBlank()) {
             return Optional.empty();
         }
 
+        // cache hit
+        CachedPhone cached = phoneCache.get(rawPhone);
+        if (cached != null && cached.expiresAt().isAfter(Instant.now())) {
+            return Optional.ofNullable(cached.e164());
+        }
+
         try {
-            String url = nocBaseUrl + "/api/v1/phone-numbers/{phone}/validations";
+            String url = nocBaseUrl + phoneValidationPath; // contains {phone}
             PhoneNumberValidationResult result =
                     restTemplate.getForObject(url, PhoneNumberValidationResult.class, rawPhone);
 
-            if (result != null && result.isValid() && result.getE164() != null) {
-                return Optional.of(result.getE164());
+            if (result != null && result.isValid() && result.getE164() != null && !result.getE164().isBlank()) {
+                String e164 = result.getE164();
+                phoneCache.put(rawPhone, new CachedPhone(e164, Instant.now().plusSeconds(phoneCacheTtlSeconds)));
+                return Optional.of(e164);
             }
         } catch (Exception ex) {
             LOGGER.warn("Error calling NOC phone validation for {}: {}", rawPhone, ex.getMessage());
@@ -52,19 +72,15 @@ public class NocNotificationService {
         return Optional.empty();
     }
 
-
-    // Στέλνει SMS μέσω NOC. Αν αποτύχει, απλά log (δεν ρίχνουμε exception).
-
     public void sendSms(String e164, String content) {
         try {
-            String url = nocBaseUrl + "/api/v1/sms";
+            String url = nocBaseUrl + smsPath;
 
             SendSmsRequest request = new SendSmsRequest();
             request.setE164(e164);
             request.setContent(content);
 
-            SendSmsResult response =
-                    restTemplate.postForObject(url, request, SendSmsResult.class);
+            SendSmsResult response = restTemplate.postForObject(url, request, SendSmsResult.class);
 
             if (response == null || !response.isSent()) {
                 LOGGER.warn("SMS not sent successfully to {}", e164);
@@ -77,36 +93,16 @@ public class NocNotificationService {
         }
     }
 
-
-    // όταν ένα ραντεβού γίνει CONFIRMED, ειδοποιούμε τον ιδιοκτήτη με SMS.
-
     public void notifyOwnerAppointmentConfirmed(Appointment appointment) {
-        if (appointment == null || appointment.getPet() == null) {
-            return;
-        }
+        if (appointment == null || appointment.getPet() == null) return;
         User owner = appointment.getPet().getOwner();
-        if (owner == null) {
-            return;
-        }
+        if (owner == null) return;
 
-        String phone = owner.getPhoneNumber();
-        if (phone == null || phone.isBlank()) {
-            LOGGER.info("Owner {} has no phone number, skipping SMS notification", owner.getUsername());
-            return;
-        }
-
-        Optional<String> e164Opt = normalizePhone(phone);
-        if (e164Opt.isEmpty()) {
-            LOGGER.info("Owner {} phone {} is invalid, skipping SMS", owner.getUsername(), phone);
-            return;
-        }
-
-        String e164 = e164Opt.get();
+        Optional<String> e164Opt = normalizePhone(owner.getPhoneNumber());
+        if (e164Opt.isEmpty()) return;
 
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-        String when = appointment.getStartTime() != null
-                ? appointment.getStartTime().format(fmt)
-                : "unknown time";
+        String when = appointment.getStartTime() != null ? appointment.getStartTime().format(fmt) : "unknown time";
 
         String message = String.format(
                 "Your appointment for %s with vet %s on %s was CONFIRMED.",
@@ -115,39 +111,19 @@ public class NocNotificationService {
                 when
         );
 
-        sendSms(e164, message);
+        sendSms(e164Opt.get(), message);
     }
 
-    // όταν ένα ραντεβού ακυρώνεται από τον κτηνίατρο ειδοποιούμε τον ιδιοκτήτη με SMS.
     public void notifyOwnerAppointmentCancelledByVet(Appointment appointment) {
-        if (appointment == null || appointment.getPet() == null) {
-            return;
-        }
+        if (appointment == null || appointment.getPet() == null) return;
         User owner = appointment.getPet().getOwner();
-        if (owner == null) {
-            return;
-        }
+        if (owner == null) return;
 
-        String phone = owner.getPhoneNumber();
-        if (phone == null || phone.isBlank()) {
-            LOGGER.info("Owner {} has no phone number, skipping SMS notification (cancelled)",
-                    owner.getUsername());
-            return;
-        }
-
-        Optional<String> e164Opt = normalizePhone(phone);
-        if (e164Opt.isEmpty()) {
-            LOGGER.info("Owner {} phone {} is invalid, skipping SMS (cancelled)",
-                    owner.getUsername(), phone);
-            return;
-        }
-
-        String e164 = e164Opt.get();
+        Optional<String> e164Opt = normalizePhone(owner.getPhoneNumber());
+        if (e164Opt.isEmpty()) return;
 
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-        String when = appointment.getStartTime() != null
-                ? appointment.getStartTime().format(fmt)
-                : "unknown time";
+        String when = appointment.getStartTime() != null ? appointment.getStartTime().format(fmt) : "unknown time";
 
         String message = String.format(
                 "Your appointment for %s with vet %s on %s was CANCELLED by the vet.",
@@ -156,36 +132,19 @@ public class NocNotificationService {
                 when
         );
 
-        sendSms(e164, message);
+        sendSms(e164Opt.get(), message);
     }
 
     public void notifyOwnerAppointmentCompleted(Appointment appointment) {
-        if (appointment == null || appointment.getPet() == null) {
-            return;
-        }
+        if (appointment == null || appointment.getPet() == null) return;
         User owner = appointment.getPet().getOwner();
-        if (owner == null) {
-            return;
-        }
+        if (owner == null) return;
 
-        String phone = owner.getPhoneNumber();
-        if (phone == null || phone.isBlank()) {
-            LOGGER.info("Owner {} has no phone number, skipping SMS notification", owner.getUsername());
-            return;
-        }
-
-        Optional<String> e164Opt = normalizePhone(phone);
-        if (e164Opt.isEmpty()) {
-            LOGGER.info("Owner {} phone {} is invalid, skipping SMS", owner.getUsername(), phone);
-            return;
-        }
-
-        String e164 = e164Opt.get();
+        Optional<String> e164Opt = normalizePhone(owner.getPhoneNumber());
+        if (e164Opt.isEmpty()) return;
 
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-        String when = appointment.getStartTime() != null
-                ? appointment.getStartTime().format(fmt)
-                : "unknown time";
+        String when = appointment.getStartTime() != null ? appointment.getStartTime().format(fmt) : "unknown time";
 
         String message = String.format(
                 "Your appointment for %s with vet %s on %s was COMPLETED.",
@@ -194,92 +153,49 @@ public class NocNotificationService {
                 when
         );
 
-        sendSms(e164, message);
+        sendSms(e164Opt.get(), message);
     }
 
     public void notifyVetNewAppointmentRequested(Appointment appointment) {
-        if (appointment == null || appointment.getVet() == null) {
-            return;
-        }
-
+        if (appointment == null || appointment.getVet() == null) return;
         User vet = appointment.getVet();
 
-        String phone = vet.getPhoneNumber();
-        if (phone == null || phone.isBlank()) {
-            LOGGER.info("Vet {} has no phone number, skipping SMS notification", vet.getUsername());
-            return;
-        }
-
-        Optional<String> e164Opt = normalizePhone(phone);
-        if (e164Opt.isEmpty()) {
-            LOGGER.info("Vet {} phone {} is invalid, skipping SMS", vet.getUsername(), phone);
-            return;
-        }
-
-        String e164 = e164Opt.get();
+        Optional<String> e164Opt = normalizePhone(vet.getPhoneNumber());
+        if (e164Opt.isEmpty()) return;
 
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-        String when = appointment.getStartTime() != null
-                ? appointment.getStartTime().format(fmt)
-                : "unknown time";
+        String when = appointment.getStartTime() != null ? appointment.getStartTime().format(fmt) : "unknown time";
 
-        String petName = (appointment.getPet() != null)
-                ? appointment.getPet().getName()
-                : "a pet";
-
+        String petName = appointment.getPet() != null ? appointment.getPet().getName() : "a pet";
         String ownerName = (appointment.getPet() != null && appointment.getPet().getOwner() != null)
                 ? appointment.getPet().getOwner().getFullName()
                 : "an owner";
 
         String message = String.format(
                 "New appointment request for %s from %s on %s. Please log in to PetCare to confirm or cancel.",
-                petName,
-                ownerName,
-                when
+                petName, ownerName, when
         );
 
-        sendSms(e164, message);
+        sendSms(e164Opt.get(), message);
     }
 
     public void notifyOwnerVisitNotesUpdated(Appointment appointment) {
-        if (appointment == null || appointment.getPet() == null) {
-            return;
-        }
-
+        if (appointment == null || appointment.getPet() == null) return;
         User owner = appointment.getPet().getOwner();
-        if (owner == null) {
-            return;
-        }
+        if (owner == null) return;
 
-        String phone = owner.getPhoneNumber();
-        if (phone == null || phone.isBlank()) {
-            LOGGER.info("Owner {} has no phone number, skipping SMS notification", owner.getUsername());
-            return;
-        }
-
-        Optional<String> e164Opt = normalizePhone(phone);
-        if (e164Opt.isEmpty()) {
-            LOGGER.info("Owner {} phone {} is invalid, skipping SMS", owner.getUsername(), phone);
-            return;
-        }
-
-        String e164 = e164Opt.get();
+        Optional<String> e164Opt = normalizePhone(owner.getPhoneNumber());
+        if (e164Opt.isEmpty()) return;
 
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-        String when = appointment.getStartTime() != null
-                ? appointment.getStartTime().format(fmt)
-                : "unknown time";
-
-        String petName = appointment.getPet().getName();
+        String when = appointment.getStartTime() != null ? appointment.getStartTime().format(fmt) : "unknown time";
 
         String message = String.format(
-                "The vet updated the medical record of %s for the visit on %s. " +
-                        "You can view the details in Pet History in the PetCare app.",
-                petName,
+                "The vet updated the medical record of %s for the visit on %s. You can view the details in Pet History in the PetCare app.",
+                appointment.getPet().getName(),
                 when
         );
 
-        sendSms(e164, message);
+        sendSms(e164Opt.get(), message);
     }
-
 }

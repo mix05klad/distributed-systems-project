@@ -13,11 +13,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -37,73 +34,64 @@ public class OwnerAppointmentController {
         this.userRepository = userRepository;
     }
 
-    // Φόρμα κράτησης ραντεβού + λίστα ραντεβού ιδιοκτήτη
     @GetMapping("/book-appointment")
-    public String showBookAppointmentForm(
-            Authentication authentication,
-            Model model,
-            @RequestParam(value = "vetId", required = false) Long vetId
-    ) {
+    public String showBookAppointmentForm(Authentication authentication,
+                                          Model model,
+                                          @RequestParam(value = "vetId", required = false) Long vetId) {
+
         Long ownerId = getCurrentUserId(authentication);
 
-        CreateAppointmentRequest form = (CreateAppointmentRequest) model.getAttribute("appointmentForm");
-        if (form == null) {
-            form = new CreateAppointmentRequest();
+        if (!model.containsAttribute("appointmentForm")) {
+            CreateAppointmentRequest form = new CreateAppointmentRequest();
+            if (vetId != null) form.setVetId(vetId);
+            model.addAttribute("appointmentForm", form);
+        } else {
+            // αν ήρθε από redirect με form, αλλά έχει και vetId param, κράτα το
+            CreateAppointmentRequest form = (CreateAppointmentRequest) model.getAttribute("appointmentForm");
+            if (form != null && form.getVetId() == null && vetId != null) {
+                form.setVetId(vetId);
+            }
         }
-
-        if (vetId != null) {
-            form.setVetId(vetId);
-        }
-
-        model.addAttribute("appointmentForm", form);
 
         populatePetsAndVets(model, ownerId);
         populateOwnerAppointments(model, ownerId);
-        populateSelectedVetAvailability(model, form.getVetId());
+
+        CreateAppointmentRequest current = (CreateAppointmentRequest) model.getAttribute("appointmentForm");
+        populateSelectedVetAvailability(model, current != null ? current.getVetId() : vetId);
 
         return "owner/book-appointment";
     }
 
-    // Υποβολή φόρμας
     @PostMapping("/book-appointment")
-    public String submitBookAppointment(
-            Authentication authentication,
-            @ModelAttribute("appointmentForm") @Valid CreateAppointmentRequest form,
-            BindingResult bindingResult,
-            Model model
-    ) {
+    public String submitBookAppointment(Authentication authentication,
+                                        @ModelAttribute("appointmentForm") @Valid CreateAppointmentRequest form,
+                                        BindingResult bindingResult,
+                                        RedirectAttributes redirectAttributes) {
+
         Long ownerId = getCurrentUserId(authentication);
 
         if (bindingResult.hasErrors()) {
-            populatePetsAndVets(model, ownerId);
-            populateOwnerAppointments(model, ownerId);
-            populateSelectedVetAvailability(model, form.getVetId());
-            return "owner/book-appointment";
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.appointmentForm", bindingResult);
+            redirectAttributes.addFlashAttribute("appointmentForm", form);
+            return "redirect:/ui/owner/book-appointment" + (form.getVetId() != null ? "?vetId=" + form.getVetId() : "");
         }
 
         try {
             appointmentService.createAppointment(form, ownerId);
-
-            model.addAttribute("successMessage",
+            redirectAttributes.addFlashAttribute("successMessage",
                     "Το ραντεβού καταχωρήθηκε (PENDING) και αναμένει επιβεβαίωση από τον κτηνίατρο.");
-            model.addAttribute("appointmentForm", new CreateAppointmentRequest());
         } catch (IllegalArgumentException | IllegalStateException | SecurityException ex) {
-            model.addAttribute("errorMessage", ex.getMessage());
-            model.addAttribute("appointmentForm", form);
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+            redirectAttributes.addFlashAttribute("appointmentForm", form);
+            return "redirect:/ui/owner/book-appointment" + (form.getVetId() != null ? "?vetId=" + form.getVetId() : "");
         }
 
-        populatePetsAndVets(model, ownerId);
-        populateOwnerAppointments(model, ownerId);
-        populateSelectedVetAvailability(model, form.getVetId());
-
-        return "owner/book-appointment";
+        return "redirect:/ui/owner/book-appointment" + (form.getVetId() != null ? "?vetId=" + form.getVetId() : "");
     }
 
     private void populatePetsAndVets(Model model, Long ownerId) {
-        // Pets του ιδιοκτήτη
         model.addAttribute("pets", petService.getPetsForOwner(ownerId));
 
-        // Όλοι οι VET
         List<User> vets = userRepository.findAll().stream()
                 .filter(u -> u.getRoles().stream().anyMatch(r -> r.equalsIgnoreCase("VET")))
                 .toList();
@@ -120,8 +108,6 @@ public class OwnerAppointmentController {
             model.addAttribute("selectedVetAvailability", null);
             return;
         }
-
-        // Πραγματικά ελεύθερα slots (διαθεσιμότητα - ραντεβού)
         List<VetFreeSlotView> freeSlots = appointmentService.getFreeSlotsForVet(vetId);
         model.addAttribute("selectedVetAvailability", freeSlots);
     }

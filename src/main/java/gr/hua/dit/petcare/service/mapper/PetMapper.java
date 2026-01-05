@@ -1,8 +1,8 @@
 package gr.hua.dit.petcare.service.mapper;
 
 import gr.hua.dit.petcare.core.model.Pet;
-import gr.hua.dit.petcare.service.model.PetView;
 import gr.hua.dit.petcare.service.model.CreatePetRequest;
+import gr.hua.dit.petcare.service.model.PetView;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -13,6 +13,8 @@ public interface PetMapper {
     @Mapping(source = "owner.fullName", target = "ownerName")
     PetView toView(Pet pet);
 
-    // δημιουργία Pet entity
+    // δημιουργία Pet entity (owner μπαίνει από service, όχι από request)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "owner", ignore = true)
     Pet toEntity(CreatePetRequest req);
 }

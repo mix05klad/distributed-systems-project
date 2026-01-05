@@ -1,7 +1,7 @@
 package gr.hua.dit.petcare.service;
 
-import gr.hua.dit.petcare.service.model.PetView;
 import gr.hua.dit.petcare.service.model.CreatePetRequest;
+import gr.hua.dit.petcare.service.model.PetView;
 
 import java.util.List;
 

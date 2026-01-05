@@ -27,30 +27,38 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User register(RegisterRequest req) {
-        if (userRepository.existsByUsername(req.getUsername())) {
+
+        // έξτρα ασφάλεια: trim username για να μην περνάει " user " ως διαφορετικό
+        String username = req.getUsername().trim();
+
+        if (userRepository.existsByUsername(username)) {
             throw new IllegalArgumentException("Username already in use");
         }
 
         // επιβεβαίωση ρόλου μέσω του enum
         String roleStr = req.getRole();
-        if (roleStr == null) {
+        if (roleStr == null || roleStr.isBlank()) {
             throw new IllegalArgumentException("Role is required");
         }
 
         Role role;
         try {
-            role = Role.valueOf(roleStr.toUpperCase(Locale.ROOT));
+            role = Role.valueOf(roleStr.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ex) {
             throw new IllegalArgumentException("Invalid role: " + roleStr + " (expected OWNER or VET)");
         }
 
         User u = new User();
-        u.setUsername(req.getUsername());
+        u.setUsername(username);
         u.setPassword(encoder.encode(req.getPassword()));
-        u.setFullName(req.getFullName());
+        u.setFullName(req.getFullName().trim());
         u.setEmail(req.getEmail());
         u.setPhoneNumber(req.getPhoneNumber());
         u.setRoles(Set.of(role.name())); // αποθηκεύουμε ως "OWNER" ή "VET"
+
+        // Αν έχεις κρατήσει το enabled field στο User (που σου πρότεινα πριν), το βάζουμε true
+        // Αν δεν υπάρχει enabled στο entity, απλά σβήσε την επόμενη γραμμή.
+        u.setEnabled(true);
 
         return userRepository.save(u);
     }

@@ -28,6 +28,10 @@ public class User {
     @Column(length = 30)
     private String phoneNumber;
 
+    // Χρήσιμο για future-proof security (lock/disable users)
+    @Column(nullable = false)
+    private boolean enabled = true;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "user_roles",
@@ -53,6 +57,7 @@ public class User {
         this.roles = roles != null ? roles : new HashSet<>();
         this.email = email;
         this.phoneNumber = phoneNumber;
+        this.enabled = true;
     }
 
     public Long getId() {
@@ -109,5 +114,13 @@ public class User {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 }

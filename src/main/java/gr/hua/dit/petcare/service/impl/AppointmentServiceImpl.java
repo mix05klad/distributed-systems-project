@@ -59,7 +59,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .orElseThrow(() -> new IllegalArgumentException("Pet not found: " + req.getPetId()));
 
         if (!pet.getOwner().getId().equals(ownerId)) {
-            throw new SecurityException("You are not the owner of this pet");
+            throw new AccessDeniedException("You are not the owner of this pet");
         }
 
         User vet = ur.findById(req.getVetId())
@@ -106,7 +106,8 @@ public class AppointmentServiceImpl implements AppointmentService {
                 );
                 if (daysBetween < MIN_DAYS_BETWEEN_VACCINES) {
                     throw new IllegalStateException(
-                            "This pet had a vaccine " + daysBetween + " days ago. Minimum allowed interval is " + MIN_DAYS_BETWEEN_VACCINES + " days."
+                            "This pet had a vaccine " + daysBetween + " days ago. Minimum allowed interval is "
+                                    + MIN_DAYS_BETWEEN_VACCINES + " days."
                     );
                 }
             }
@@ -127,6 +128,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         try {
             nocNotificationService.notifyVetNewAppointmentRequested(a);
         } catch (Exception ex) {
+            // no-op
         }
 
         return mapper.toView(a);
@@ -138,7 +140,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .orElseThrow(() -> new IllegalArgumentException("Appointment not found: " + appointmentId));
 
         if (!a.getVet().getId().equals(vetId)) {
-            throw new SecurityException("You are not the vet for this appointment");
+            throw new AccessDeniedException("You are not the vet for this appointment");
         }
 
         if (a.getStatus() != AppointmentStatus.PENDING) {
@@ -148,11 +150,10 @@ public class AppointmentServiceImpl implements AppointmentService {
         a.setStatus(AppointmentStatus.CONFIRMED);
         a = ar.save(a);
 
-        // Στέλνει SMS στον ιδιοκτήτη
         try {
             nocNotificationService.notifyOwnerAppointmentConfirmed(a);
         } catch (Exception ex) {
-            // δεν ρίχνουμε exception
+            // no-op
         }
 
         return mapper.toView(a);
@@ -167,11 +168,11 @@ public class AppointmentServiceImpl implements AppointmentService {
         Long vetId = a.getVet().getId();
 
         if (!ownerId.equals(userId) && !vetId.equals(userId)) {
-            throw new SecurityException("You are not allowed to cancel this appointment");
+            throw new AccessDeniedException("You are not allowed to cancel this appointment");
         }
 
         if (a.getStatus() == AppointmentStatus.CANCELLED) {
-            return mapper.toView(a); // ήδη cancelled
+            return mapper.toView(a);
         }
 
         if (a.getStatus() == AppointmentStatus.COMPLETED) {
@@ -181,11 +182,11 @@ public class AppointmentServiceImpl implements AppointmentService {
         a.setStatus(AppointmentStatus.CANCELLED);
         a = ar.save(a);
 
-        //Αν το cancel το έκανε ο vet, αποστολή SMS στον owner
         if (userId.equals(vetId)) {
             try {
                 nocNotificationService.notifyOwnerAppointmentCancelledByVet(a);
             } catch (Exception ex) {
+                // no-op
             }
         }
 
@@ -198,7 +199,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .orElseThrow(() -> new IllegalArgumentException("Appointment not found: " + appointmentId));
 
         if (!a.getVet().getId().equals(vetId)) {
-            throw new SecurityException("You are not the vet for this appointment");
+            throw new AccessDeniedException("You are not the vet for this appointment");
         }
 
         if (a.getStatus() == AppointmentStatus.CANCELLED) {
@@ -208,10 +209,10 @@ public class AppointmentServiceImpl implements AppointmentService {
         a.setStatus(AppointmentStatus.COMPLETED);
         a = ar.save(a);
 
-        // SMS στον ιδιοκτήτη ότι το ραντεβού ολοκληρώθηκε
         try {
             nocNotificationService.notifyOwnerAppointmentCompleted(a);
         } catch (Exception ex) {
+            // no-op
         }
 
         return mapper.toView(a);
@@ -241,7 +242,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .orElseThrow(() -> new IllegalArgumentException("Appointment not found: " + appointmentId));
 
         if (!a.getVet().getId().equals(vetId)) {
-            throw new SecurityException("You are not the vet for this appointment");
+            throw new AccessDeniedException("You are not the vet for this appointment");
         }
 
         if (a.getStatus() != AppointmentStatus.COMPLETED) {
@@ -251,10 +252,10 @@ public class AppointmentServiceImpl implements AppointmentService {
         a.setVetNotes(notes);
         a = ar.save(a);
 
-        // Ειδοποίηση στον ιδιοκτήτη ότι ενημερώθηκαν τα notes
         try {
             nocNotificationService.notifyOwnerVisitNotesUpdated(a);
         } catch (Exception ex) {
+            // no-op
         }
 
         return mapper.toView(a);
@@ -263,7 +264,6 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional(readOnly = true)
     public List<AppointmentView> getPetHistory(Long petId, Long ownerId) {
-        // έλεγχος ιδιοκτησίας pet
         Pet pet = pr.findById(petId)
                 .orElseThrow(() -> new IllegalArgumentException("Pet not found: " + petId));
 
@@ -283,34 +283,30 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         List<VetFreeSlotView> result = new ArrayList<>();
 
-        // Όλες οι δηλωμένες διαθεσιμότητες του vet
         List<VetAvailability> slots =
                 vetAvailabilityRepository.findByVetIdOrderByStartTimeAsc(vetId);
 
         for (VetAvailability s : slots) {
             LocalDateTime slotStart = s.getStartTime();
-            LocalDateTime slotEnd   = s.getEndTime();
+            LocalDateTime slotEnd = s.getEndTime();
 
-            // Όλα τα PENDING/CONFIRMED ραντεβού που πέφτουν μέσα στο slot
             List<Appointment> conflicts =
                     ar.findOverlappingAppointments(vetId, slotStart, slotEnd);
 
             conflicts.sort(Comparator.comparing(Appointment::getStartTime));
 
-            // Ξεκινάμε με το πλήρες slot ως "ελεύθερο"
             List<TimeSegment> freeSegments = new ArrayList<>();
             freeSegments.add(new TimeSegment(slotStart, slotEnd));
 
-            // Αφαιρούμε τα κομμάτια που καταλαμβάνουν τα ραντεβού
             for (Appointment ap : conflicts) {
                 LocalDateTime aStart = ap.getStartTime();
-                LocalDateTime aEnd   = ap.getEndTime();
+                LocalDateTime aEnd = ap.getEndTime();
 
                 List<TimeSegment> updated = new ArrayList<>();
 
                 for (TimeSegment seg : freeSegments) {
                     LocalDateTime fStart = seg.start;
-                    LocalDateTime fEnd   = seg.end;
+                    LocalDateTime fEnd = seg.end;
 
                     if (aEnd.isBefore(fStart) || !aStart.isBefore(fEnd)) {
                         updated.add(seg);
@@ -343,7 +339,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             LocalDateTime now = LocalDateTime.now();
             for (TimeSegment seg : freeSegments) {
                 LocalDateTime start = seg.start.isBefore(now) ? now : seg.start;
-                LocalDateTime end   = seg.end;
+                LocalDateTime end = seg.end;
 
                 if (end.isAfter(start)) {
                     result.add(new VetFreeSlotView(start, end));
@@ -363,5 +359,4 @@ public class AppointmentServiceImpl implements AppointmentService {
             this.end = end;
         }
     }
-
 }

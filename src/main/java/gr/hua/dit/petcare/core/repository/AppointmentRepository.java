@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
 
@@ -47,6 +48,29 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
         order by a.startTime desc
     """)
     List<Appointment> findAllByVetId(@Param("vetId") Long vetId);
+
+    // χρήσιμο για vet-only actions (confirm/complete/notes)
+    Optional<Appointment> findByIdAndVetId(Long id, Long vetId);
+
+    // χρήσιμο για owner-only actions (cancel / view details)
+    @Query("""
+        select a
+        from Appointment a
+        where a.id = :appointmentId
+          and a.pet.owner.id = :ownerId
+    """)
+    Optional<Appointment> findByIdAndOwnerId(@Param("appointmentId") Long appointmentId,
+                                             @Param("ownerId") Long ownerId);
+
+    // pending για vet (συχνό UI/REST endpoint)
+    @Query("""
+        select a
+        from Appointment a
+        where a.vet.id = :vetId
+          and a.status = gr.hua.dit.petcare.core.model.AppointmentStatus.PENDING
+        order by a.startTime asc
+    """)
+    List<Appointment> findPendingForVet(@Param("vetId") Long vetId);
 
     // τελευταίο COMPLETED ραντεβού συγκεκριμένου τύπου (VACCINE) για pet
     Appointment findTopByPetIdAndVisitTypeAndStatusOrderByStartTimeDesc(

@@ -20,9 +20,9 @@ public class AppointmentView {
 
     private AppointmentStatus status;
 
-    private String vetNotes;
-
     private VisitType visitType;
+
+    private String vetNotes;
 
     public Long getId() {
         return id;
@@ -88,19 +88,19 @@ public class AppointmentView {
         this.status = status;
     }
 
-    public String getVetNotes() {
-        return vetNotes;
-    }
-
-    public void setVetNotes(String vetNotes) {
-        this.vetNotes = vetNotes;
-    }
-
     public VisitType getVisitType() {
         return visitType;
     }
 
     public void setVisitType(VisitType visitType) {
         this.visitType = visitType;
+    }
+
+    public String getVetNotes() {
+        return vetNotes;
+    }
+
+    public void setVetNotes(String vetNotes) {
+        this.vetNotes = vetNotes;
     }
 }

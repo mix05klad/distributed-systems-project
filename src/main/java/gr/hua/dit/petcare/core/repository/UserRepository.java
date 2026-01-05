@@ -9,6 +9,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByUsername(String username);
 
-    // αποτρέπει την εισαγωγή υπάρχοντος username
     boolean existsByUsername(String username);
 }

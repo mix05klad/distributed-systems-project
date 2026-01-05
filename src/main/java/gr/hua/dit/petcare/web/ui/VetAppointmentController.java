@@ -1,5 +1,6 @@
 package gr.hua.dit.petcare.web.ui;
 
+import gr.hua.dit.petcare.core.model.AppointmentStatus;
 import gr.hua.dit.petcare.security.ApplicationUserDetails;
 import gr.hua.dit.petcare.service.AppointmentService;
 import gr.hua.dit.petcare.service.model.AppointmentView;
@@ -24,20 +25,18 @@ public class VetAppointmentController {
         this.appointmentService = appointmentService;
     }
 
-    // Λίστα ραντεβού κτηνιάτρου
     @GetMapping("/appointments")
     public String listAppointments(Authentication authentication,
                                    Model model,
-                                   @RequestParam(value = "showCompleted",
-                                           required = false,
-                                           defaultValue = "false") boolean showCompleted) {
+                                   @RequestParam(value = "showCompleted", required = false, defaultValue = "false")
+                                   boolean showCompleted) {
 
         Long vetId = getCurrentVetId(authentication);
 
         List<AppointmentView> all = appointmentService.getAppointmentsForVet(vetId);
 
         List<AppointmentView> filtered = all.stream()
-                .filter(a -> showCompleted || !"COMPLETED".equalsIgnoreCase(a.getStatus().toString()))
+                .filter(a -> showCompleted || a.getStatus() != AppointmentStatus.COMPLETED)
                 .toList();
 
         model.addAttribute("appointments", filtered);
@@ -46,7 +45,6 @@ public class VetAppointmentController {
         return "vet/appointments";
     }
 
-    // Επιβεβαίωση ραντεβού
     @PostMapping("/appointments/{id}/confirm")
     public String confirmAppointment(@PathVariable("id") Long id,
                                      Authentication authentication,
@@ -64,7 +62,6 @@ public class VetAppointmentController {
         return "redirect:/ui/vet/appointments";
     }
 
-    // Ακύρωση ραντεβού
     @PostMapping("/appointments/{id}/cancel")
     public String cancelAppointment(@PathVariable("id") Long id,
                                     Authentication authentication,
@@ -82,7 +79,6 @@ public class VetAppointmentController {
         return "redirect:/ui/vet/appointments";
     }
 
-    // Mark as COMPLETED
     @PostMapping("/appointments/{id}/complete")
     public String completeAppointment(@PathVariable("id") Long id,
                                       Authentication authentication,
@@ -100,7 +96,6 @@ public class VetAppointmentController {
         return "redirect:/ui/vet/appointments";
     }
 
-    // φόρμα καταχώρισης σημειώσεων για COMPLETED ραντεβού
     @GetMapping("/appointments/{id}/notes")
     public String showNotesForm(@PathVariable("id") Long id,
                                 Authentication authentication,
@@ -111,8 +106,7 @@ public class VetAppointmentController {
 
         AppointmentView view;
         try {
-            List<AppointmentView> all = appointmentService.getAppointmentsForVet(vetId);
-            view = all.stream()
+            view = appointmentService.getAppointmentsForVet(vetId).stream()
                     .filter(a -> a.getId().equals(id))
                     .findFirst()
                     .orElseThrow(() -> new IllegalArgumentException("Appointment not found: " + id));
@@ -121,25 +115,21 @@ public class VetAppointmentController {
             return "redirect:/ui/vet/appointments";
         }
 
-        // Επιτρέπουμε notes μόνο σε COMPLETED
-        if (!"COMPLETED".equalsIgnoreCase(view.getStatus().toString())) {
-            redirectAttributes.addFlashAttribute("errorMessage",
-                    "You can add notes only to COMPLETED appointments.");
+        if (view.getStatus() != AppointmentStatus.COMPLETED) {
+            redirectAttributes.addFlashAttribute("errorMessage", "You can add notes only to COMPLETED appointments.");
             return "redirect:/ui/vet/appointments";
         }
 
         if (!model.containsAttribute("notesForm")) {
             VisitNotesRequest form = new VisitNotesRequest();
-            form.setNotes(view.getVetNotes()); // αν υπάρχουν ήδη σημειώσεις, τις δείχνουμε
+            form.setNotes(view.getVetNotes());
             model.addAttribute("notesForm", form);
         }
 
         model.addAttribute("appointment", view);
-
         return "vet/appointment-notes";
     }
 
-    // submit των σημειώσεων
     @PostMapping("/appointments/{id}/notes")
     public String submitNotes(@PathVariable("id") Long id,
                               Authentication authentication,
@@ -151,8 +141,7 @@ public class VetAppointmentController {
         Long vetId = getCurrentVetId(authentication);
 
         if (bindingResult.hasErrors()) {
-            List<AppointmentView> all = appointmentService.getAppointmentsForVet(vetId);
-            AppointmentView view = all.stream()
+            AppointmentView view = appointmentService.getAppointmentsForVet(vetId).stream()
                     .filter(a -> a.getId().equals(id))
                     .findFirst()
                     .orElse(null);
@@ -170,6 +159,11 @@ public class VetAppointmentController {
         return "redirect:/ui/vet/appointments";
     }
 
+    @GetMapping("/record-notes")
+    public String recordNotesShortcut() {
+        return "redirect:/ui/vet/appointments?showCompleted=true";
+    }
+
     private Long getCurrentVetId(Authentication authentication) {
         Object principal = authentication.getPrincipal();
         if (principal instanceof ApplicationUserDetails details) {
@@ -177,13 +171,4 @@ public class VetAppointmentController {
         }
         throw new IllegalStateException("No authenticated vet");
     }
-
-    // Shortcut στο screen με ραντεβού
-    @GetMapping("/record-notes")
-    public String recordNotesShortcut() {
-        // δείχνει όλα τα ραντεβού και τα COMPLETED,
-        // ώστε ο vet να επιλέξει και να πατήσει "Notes"
-        return "redirect:/ui/vet/appointments?showCompleted=true";
-    }
-
 }

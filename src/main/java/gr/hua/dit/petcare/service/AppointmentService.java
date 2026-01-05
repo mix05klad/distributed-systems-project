@@ -4,7 +4,6 @@ import gr.hua.dit.petcare.service.model.AppointmentView;
 import gr.hua.dit.petcare.service.model.CreateAppointmentRequest;
 import gr.hua.dit.petcare.service.model.VetFreeSlotView;
 
-
 import java.util.List;
 
 public interface AppointmentService {
@@ -19,8 +18,6 @@ public interface AppointmentService {
 
     AppointmentView updateVisitNotes(Long appointmentId, Long vetId, String notes);
 
-
     List<AppointmentView> getPetHistory(Long petId, Long ownerId);
     List<VetFreeSlotView> getFreeSlotsForVet(Long vetId);
-
 }

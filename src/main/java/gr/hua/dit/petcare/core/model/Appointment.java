@@ -1,9 +1,9 @@
 package gr.hua.dit.petcare.core.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
-import gr.hua.dit.petcare.core.model.VisitType;
 
 @Entity
 @Table(name = "appointment")
@@ -14,26 +14,32 @@ public class Appointment {
     private Long id;
 
     // αναγνωριστικό κατοικιδίου
+    @NotNull(message = "Pet is required")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "pet_id", nullable = false)
     private Pet pet;
 
     // αναγνωριστικό κτηνιάτρου
+    @NotNull(message = "Vet is required")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "vet_id", nullable = false)
     private User vet;
 
+    @NotNull(message = "startTime is required")
     @Column(nullable = false)
     private LocalDateTime startTime;
 
+    @NotNull(message = "endTime is required")
     @Column(nullable = false)
     private LocalDateTime endTime;
 
+    @NotNull(message = "status is required")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private AppointmentStatus status = AppointmentStatus.PENDING;
 
     // τύπος επίσκεψης (CHECKUP / VACCINE / TREATMENT)
+    @NotNull(message = "visitType is required")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private VisitType visitType = VisitType.CHECKUP;
@@ -43,7 +49,7 @@ public class Appointment {
     private String vetNotes;
 
     // αυτόματη συμπλήρωση της ημερομηνίας εγγραφής
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     public Appointment() {
@@ -55,6 +61,7 @@ public class Appointment {
                        LocalDateTime startTime,
                        LocalDateTime endTime,
                        AppointmentStatus status,
+                       VisitType visitType,
                        String vetNotes,
                        LocalDateTime createdAt) {
         this.id = id;
@@ -63,6 +70,7 @@ public class Appointment {
         this.startTime = startTime;
         this.endTime = endTime;
         this.status = status;
+        this.visitType = visitType;
         this.vetNotes = vetNotes;
         this.createdAt = createdAt;
     }
@@ -72,10 +80,29 @@ public class Appointment {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
+        normalizeDefaultsAndValidate();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        normalizeDefaultsAndValidate();
+    }
+
+    private void normalizeDefaultsAndValidate() {
+        if (status == null) {
+            status = AppointmentStatus.PENDING;
+        }
+        if (visitType == null) {
+            visitType = VisitType.CHECKUP;
+        }
+
+        // βασικός έλεγχος ορθότητας χρόνων
+        if (startTime != null && endTime != null && !endTime.isAfter(startTime)) {
+            throw new IllegalStateException("endTime must be after startTime");
+        }
     }
 
     // getters / setters
-
     public Long getId() {
         return id;
     }
@@ -100,16 +127,16 @@ public class Appointment {
         return status;
     }
 
+    public VisitType getVisitType() {
+        return visitType;
+    }
+
     public String getVetNotes() {
         return vetNotes;
     }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
-    }
-
-    public VisitType getVisitType() {
-        return visitType;
     }
 
     public void setId(Long id) {
@@ -136,15 +163,16 @@ public class Appointment {
         this.status = status;
     }
 
-    public void setVetNotes(String vetNotes) {
-        this.vetNotes = vetNotes;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
     public void setVisitType(VisitType visitType) {
         this.visitType = visitType;
+    }
+
+    public void setVetNotes(String vetNotes) {
+        this.vetNotes = vetNotes != null ? vetNotes.trim() : null;
+    }
+
+    // καλό να ΜΗΝ το πειράζεις από έξω, αλλά το αφήνω για συμβατότητα
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

@@ -28,7 +28,7 @@ public class JwtUtils {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
-    // δημιουργία JTW token
+    // δημιουργία JWT token
     public String generateToken(Authentication authentication) {
         UserDetails principal = (UserDetails) authentication.getPrincipal();
 
@@ -48,7 +48,7 @@ public class JwtUtils {
                 .compact();
     }
 
-    // δημιουργία JTW από UserDetails
+    // δημιουργία JWT από UserDetails
     public String generateTokenFromUserDetails(UserDetails userDetails) {
         String roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)

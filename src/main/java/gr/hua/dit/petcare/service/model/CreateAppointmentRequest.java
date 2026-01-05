@@ -15,11 +15,11 @@ public class CreateAppointmentRequest {
     private Long vetId;
 
     @NotNull
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime startTime;
 
     @NotNull
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime endTime;
 
     @NotNull
