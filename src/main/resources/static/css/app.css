@@ -1,35 +1,37 @@
 /* =========================
-   PetCare UI - app.css
+   PetCare UI - app.css (Emerald Theme)
    ========================= */
 
 :root{
-    --bg: #0b1220;
+    --bg: #07111a;
     --panel: rgba(255,255,255,0.06);
     --panel-2: rgba(255,255,255,0.09);
     --border: rgba(255,255,255,0.12);
     --text: rgba(255,255,255,0.92);
-    --muted: rgba(255,255,255,0.68);
+    --muted: rgba(255,255,255,0.66);
 
-    --brand: #7c3aed;   /* purple */
-    --brand-2: #22c55e; /* green */
-    --danger: #ef4444;
-    --warn: #f59e0b;
-    --info: #38bdf8;
+    /* Emerald palette */
+    --brand: #22c55e;   /* emerald */
+    --brand-2: #10b981; /* mint/teal */
+    --danger: #fb7185;  /* rose */
+    --warn: #fbbf24;    /* amber */
+    --info: #34d399;    /* soft green */
 
-    --shadow: 0 10px 30px rgba(0,0,0,0.35);
+    --shadow: 0 14px 40px rgba(0,0,0,0.40);
     --radius: 18px;
 }
 
 *{ box-sizing:border-box; }
 html,body{ height:100%; }
+
 body{
     margin:0;
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
     color: var(--text);
     background:
-            radial-gradient(900px 500px at 20% 10%, rgba(124,58,237,0.35), transparent 60%),
-            radial-gradient(900px 500px at 80% 20%, rgba(34,197,94,0.20), transparent 60%),
-            radial-gradient(900px 500px at 50% 90%, rgba(56,189,248,0.18), transparent 60%),
+            radial-gradient(900px 500px at 20% 10%, rgba(34,197,94,0.24), transparent 60%),
+            radial-gradient(900px 500px at 80% 20%, rgba(16,185,129,0.18), transparent 60%),
+            radial-gradient(900px 500px at 50% 90%, rgba(52,211,153,0.12), transparent 60%),
             var(--bg);
 }
 
@@ -67,8 +69,8 @@ a:hover{ text-decoration: underline; }
     width: 36px;
     height: 36px;
     border-radius: 12px;
-    background: linear-gradient(135deg, var(--brand), var(--info));
-    box-shadow: 0 10px 24px rgba(124,58,237,0.35);
+    background: linear-gradient(135deg, var(--brand), var(--brand-2));
+    box-shadow: 0 10px 24px rgba(34,197,94,0.26);
 }
 
 .subtitle{
@@ -138,8 +140,8 @@ input, select, textarea{
 input::placeholder, textarea::placeholder{ color: rgba(255,255,255,0.45); }
 
 input:focus, select:focus, textarea:focus{
-    border-color: rgba(124,58,237,0.65);
-    box-shadow: 0 0 0 4px rgba(124,58,237,0.20);
+    border-color: rgba(34,197,94,0.70);
+    box-shadow: 0 0 0 4px rgba(34,197,94,0.18);
 }
 
 .help{
@@ -176,19 +178,24 @@ input:focus, select:focus, textarea:focus{
     border-color: rgba(255,255,255,0.18);
 }
 
-.btn.primary{
-    background: linear-gradient(135deg, rgba(124,58,237,0.95), rgba(56,189,248,0.75));
-    border-color: rgba(124,58,237,0.35);
-}
-
-.btn.success{
-    background: linear-gradient(135deg, rgba(34,197,94,0.9), rgba(56,189,248,0.45));
+/* Primary buttons (emerald) */
+.btn.primary,
+.btn.btn-primary{
+    background: linear-gradient(135deg, rgba(34,197,94,0.95), rgba(16,185,129,0.85));
     border-color: rgba(34,197,94,0.35);
 }
 
-.btn.danger{
-    background: rgba(239,68,68,0.16);
-    border-color: rgba(239,68,68,0.35);
+/* Success (slightly lighter) */
+.btn.success,
+.btn.btn-success{
+    background: linear-gradient(135deg, rgba(52,211,153,0.92), rgba(34,197,94,0.70));
+    border-color: rgba(52,211,153,0.35);
+}
+
+.btn.danger,
+.btn.btn-danger{
+    background: rgba(251,113,133,0.16);
+    border-color: rgba(251,113,133,0.35);
 }
 
 .btn.link{
@@ -206,9 +213,23 @@ input:focus, select:focus, textarea:focus{
     background: rgba(255,255,255,0.06);
 }
 
-.alert.success{ border-color: rgba(34,197,94,0.35); background: rgba(34,197,94,0.14); }
-.alert.warning{ border-color: rgba(245,158,11,0.35); background: rgba(245,158,11,0.14); }
-.alert.error{ border-color: rgba(239,68,68,0.35); background: rgba(239,68,68,0.14); }
+.alert.success,
+.alert.alert-success{
+    border-color: rgba(34,197,94,0.35);
+    background: rgba(34,197,94,0.14);
+}
+
+.alert.warning,
+.alert.alert-warning{
+    border-color: rgba(251,191,36,0.35);
+    background: rgba(251,191,36,0.14);
+}
+
+.alert.error,
+.alert.alert-error{
+    border-color: rgba(251,113,133,0.35);
+    background: rgba(251,113,133,0.14);
+}
 
 .table{
     width: 100%;
@@ -266,38 +287,6 @@ input:focus, select:focus, textarea:focus{
 .tile-title{ font-weight: 800; margin: 0 0 6px; }
 .tile-desc{ margin: 0; color: var(--muted); font-size: 13px; }
 
-/* =========================
-   Compatibility aliases (so both naming styles work)
-   ========================= */
-
-/* Buttons: support both ".btn primary" and ".btn btn-primary" */
-.btn.btn-primary{
-    background: linear-gradient(135deg, rgba(124,58,237,0.95), rgba(56,189,248,0.75));
-    border-color: rgba(124,58,237,0.35);
-}
-.btn.btn-success{
-    background: linear-gradient(135deg, rgba(34,197,94,0.9), rgba(56,189,248,0.45));
-    border-color: rgba(34,197,94,0.35);
-}
-.btn.btn-danger{
-    background: rgba(239,68,68,0.16);
-    border-color: rgba(239,68,68,0.35);
-}
-
-/* Alerts: support both ".alert success" and ".alert alert-success" */
-.alert.alert-success{
-    border-color: rgba(34,197,94,0.35);
-    background: rgba(34,197,94,0.14);
-}
-.alert.alert-warning{
-    border-color: rgba(245,158,11,0.35);
-    background: rgba(245,158,11,0.14);
-}
-.alert.alert-error{
-    border-color: rgba(239,68,68,0.35);
-    background: rgba(239,68,68,0.14);
-}
-
 .nav-actions{
     display:flex;
     gap:10px;
@@ -306,6 +295,6 @@ input:focus, select:focus, textarea:focus{
 
 .help-error{
     font-size: 12px;
-    color: rgba(239,68,68,0.95);
+    color: rgba(251,113,133,0.95);
     margin-top: 2px;
 }
