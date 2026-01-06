@@ -1,29 +1,56 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Login</title>
+
+    <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
 
-<h2>Login</h2>
-
-<form method="post" action="/login">
-    <div>
-        <label>Username</label>
-        <input type="text" name="username" required />
+<div class="container">
+    <div class="topbar">
+        <div class="brand">
+            <div class="logo"></div>
+            <div>
+                <div>PetCare</div>
+                <div class="subtitle">Sign in to continue</div>
+            </div>
+        </div>
+        <a class="btn link" th:href="@{/}">Back</a>
     </div>
 
-    <div>
-        <label>Password</label>
-        <input type="password" name="password" required />
+    <div class="card center-card">
+        <h1 class="page-title">Login</h1>
+        <p class="page-desc">Use your username and password.</p>
+
+        <!-- Optional: Spring Security adds ?error or ?logout -->
+        <div class="alert error" th:if="${param.error}">
+            Invalid username or password.
+        </div>
+        <div class="alert success" th:if="${param.logout}">
+            You have been logged out.
+        </div>
+
+        <form method="post" action="/login">
+            <div class="field">
+                <label for="username">Username</label>
+                <input id="username" type="text" name="username" autocomplete="username" required>
+            </div>
+
+            <div class="field">
+                <label for="password">Password</label>
+                <input id="password" type="password" name="password" autocomplete="current-password" required>
+            </div>
+
+            <div class="actions">
+                <button class="btn primary" type="submit">Sign in</button>
+                <a class="btn" th:href="@{/register}">Create account</a>
+            </div>
+        </form>
     </div>
-
-    <button type="submit">Login</button>
-    <button type="button" onclick="location.href='/'">Back</button>
-
-</form>
-
-<a href="/register">Register</a>
+</div>
 
 </body>
 </html>

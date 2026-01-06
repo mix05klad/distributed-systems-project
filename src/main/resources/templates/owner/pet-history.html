@@ -1,104 +1,131 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="el">
 <head>
-  <meta charset="UTF-8">
-  <title>Pet Medical History</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>Pet Medical History</title>
 </head>
 <body>
 
-<h2>Pet Medical History</h2>
+<div class="container">
 
-<div th:if="${errorMessage}">
-  <p th:text="${errorMessage}" style="color:red;"></p>
+    <!-- Top bar -->
+    <div class="topbar">
+        <div>
+            <div class="brand">
+                <div class="logo"></div>
+                <div>
+                    <div>PetCare</div>
+                    <div class="subtitle">Owner • Pet History</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn" type="button" onclick="location.href='/ui/owner/home'">Dashboard</button>
+            <form action="/logout" method="post" style="margin:0;">
+                <button class="btn danger" type="submit">Logout</button>
+            </form>
+        </div>
+    </div>
+
+    <h1 class="page-title">Pet Medical History</h1>
+    <p class="page-desc">Επίλεξε κατοικίδιο και (προαιρετικά) φίλτρο τύπου επίσκεψης για να δεις το ιστορικό.</p>
+
+    <!-- Error -->
+    <div th:if="${errorMessage}" class="alert error">
+        <span th:text="${errorMessage}">Error</span>
+    </div>
+
+    <!-- Centered content -->
+    <div class="card center-card">
+
+        <h2 style="margin-top:0;">Filters</h2>
+
+        <form class="form" th:action="@{/ui/owner/pet-history}" method="get">
+
+            <div class="field">
+                <label>Pet</label>
+                <select name="petId">
+                    <option value="" disabled th:selected="${selectedPetId == null}">
+                        -- Select pet --
+                    </option>
+                    <option th:each="p : ${pets}"
+                            th:value="${p.id}"
+                            th:text="${p.name}"
+                            th:selected="${selectedPetId != null and selectedPetId == p.id}">
+                    </option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Visit type</label>
+                <select name="visitType">
+                    <option value="" th:selected="${selectedVisitType == null}">
+                        All types
+                    </option>
+                    <option th:each="t : ${allVisitTypes}"
+                            th:value="${t}"
+                            th:text="${t}"
+                            th:selected="${selectedVisitType != null and selectedVisitType == t}">
+                    </option>
+                </select>
+            </div>
+
+            <div class="actions">
+                <button class="btn primary" type="submit">Show history</button>
+                <button class="btn" type="button" onclick="location.href='/ui/owner/home'">Back</button>
+            </div>
+
+            <p class="help">Tip: Αν δεν βλέπεις εγγραφές, βεβαιώσου ότι υπάρχουν COMPLETED ραντεβού για το συγκεκριμένο pet.</p>
+        </form>
+
+        <div class="divider"></div>
+
+        <!-- Pet info card -->
+        <div th:if="${selectedPetId != null && selectedPetName != null}" class="card" style="padding:14px;">
+            <h3 style="margin-top:0;" th:text="${selectedPetName}">Pet name</h3>
+            <p class="muted" style="margin:0 0 8px;">
+                Type:
+                <span th:text="${selectedPetType != null ? selectedPetType : 'N/A'}">type</span>
+                • Age:
+                <span th:text="${selectedPetAge != null ? selectedPetAge : 'N/A'}">age</span>
+                • Completed visits:
+                <strong th:text="${historyCount}">0</strong>
+            </p>
+        </div>
+
+        <!-- History table -->
+        <div th:if="${history != null and !history.isEmpty()}" style="margin-top:12px;">
+            <table class="table">
+                <tr>
+                    <th>Date / Time</th>
+                    <th>Vet</th>
+                    <th>Visit type</th>
+                    <th>Status</th>
+                    <th>Notes</th>
+                </tr>
+                <tr th:each="a : ${history}">
+                    <td th:text="${#temporals.format(a.startTime, 'dd/MM/yyyy HH:mm')}">date</td>
+                    <td th:text="${a.vetName}">vet</td>
+                    <td th:text="${a.visitType}">type</td>
+                    <td th:text="${a.status}">status</td>
+                    <td th:text="${a.vetNotes != null ? a.vetNotes : ''}">notes</td>
+                </tr>
+            </table>
+        </div>
+
+        <div th:if="${selectedPetId != null and (history == null or history.isEmpty())}" class="alert warning" style="margin-top:12px;">
+            No completed visits for this pet yet (with the selected filter).
+        </div>
+
+        <div th:if="${selectedPetId == null}" class="alert" style="margin-top:12px;">
+            Please select a pet to view its medical history.
+        </div>
+
+    </div>
 </div>
-
-<form th:action="@{/ui/owner/pet-history}" method="get">
-  <div>
-    <label>Pet</label>
-    <select name="petId">
-      <option value="" disabled
-              th:selected="${selectedPetId == null}">
-        -- Select pet --
-      </option>
-      <option th:each="p : ${pets}"
-              th:value="${p.id}"
-              th:text="${p.name}"
-              th:selected="${selectedPetId != null and selectedPetId == p.id}">
-      </option>
-    </select>
-  </div>
-
-  <div>
-    <label>Visit type</label>
-    <select name="visitType">
-      <option value="" th:selected="${selectedVisitType == null}">
-        All types
-      </option>
-      <option th:each="t : ${allVisitTypes}"
-              th:value="${t}"
-              th:text="${t}"
-              th:selected="${selectedVisitType != null and selectedVisitType == t}">
-      </option>
-    </select>
-  </div>
-
-  <div>
-    <button type="submit">Show history</button>
-  </div>
-</form>
-
-<hr/>
-
-<!-- Card με βασικά στοιχεία pet -->
-<div th:if="${selectedPetId != null && selectedPetName != null}"
-     style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
-  <h3 th:text="${selectedPetName}">Pet name</h3>
-  <p>
-    <span>Type: </span>
-    <span th:text="${selectedPetType != null ? selectedPetType : 'N/A'}">type</span>
-  </p>
-  <p>
-    <span>Age: </span>
-    <span th:text="${selectedPetAge != null ? selectedPetAge : 'N/A'}">age</span>
-  </p>
-  <p>
-    <span>Total completed visits: </span>
-    <span th:text="${historyCount}">0</span>
-  </p>
-</div>
-
-<div th:if="${history != null and !history.isEmpty()}">
-  <table border="1">
-    <tr>
-      <th>Date / Time</th>
-      <th>Vet</th>
-      <th>Visit type</th>
-      <th>Status</th>
-      <th>Notes</th>
-    </tr>
-    <tr th:each="a : ${history}">
-      <td th:text="${#temporals.format(a.startTime, 'dd/MM/yyyy HH:mm')}">date</td>
-      <td th:text="${a.vetName}">vet</td>
-      <td th:text="${a.visitType}">type</td>
-      <td th:text="${a.status}">status</td>
-      <td th:text="${a.vetNotes != null ? a.vetNotes : ''}">notes</td>
-    </tr>
-  </table>
-</div>
-
-<div th:if="${selectedPetId != null and (history == null or history.isEmpty())}">
-  <p>No completed visits for this pet yet (with the selected filter).</p>
-</div>
-
-<div th:if="${selectedPetId == null}">
-  <p>Please select a pet to view its medical history.</p>
-</div>
-
-<p>
-  <button type="button" onclick="location.href='/ui/owner/home'">
-    Back to Dashboard
-  </button>
-</p>
 
 </body>
 </html>

@@ -1,48 +1,118 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="el">
 <head>
-  <title>Vet Availability</title>
-  <meta charset="UTF-8">
+    <meta charset="UTF-8">
+    <title>Vet Availability</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
-<h1>Manage Availability</h1>
 
-<div th:if="${successMessage}" th:text="${successMessage}" style="color: green;"></div>
-<div th:if="${errorMessage}" th:text="${errorMessage}" style="color: red;"></div>
+<div class="container">
 
-<form th:action="@{/ui/vet/availability}" th:object="${availabilityForm}" method="post">
-  <div>
-    <label>Start</label>
-    <input type="datetime-local" th:field="*{startTime}"/>
-  </div>
+    <!-- Top bar -->
+    <div class="topbar">
+        <div class="brand">
+            <div class="logo"></div>
+            <div>
+                <div>PetCare</div>
+                <div class="subtitle">Vet • Availability</div>
+            </div>
+        </div>
 
-  <div>
-    <label>End</label>
-    <input type="datetime-local" th:field="*{endTime}"/>
-  </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <button class="btn" type="button" onclick="location.href='/ui/vet/home'">Dashboard</button>
 
-  <button type="submit">Add Slot</button>
-</form>
+            <form th:action="@{/logout}" method="post" style="margin:0;">
+                <button class="btn danger" type="submit">Logout</button>
+            </form>
+        </div>
+    </div>
 
-<h2>Existing Availability</h2>
-<table border="1">
-  <tr>
-    <th>Start</th>
-    <th>End</th>
-    <th>Actions</th>
-  </tr>
-  <tr th:each="slot : ${slots}">
-    <td th:text="${slot.startTime}"></td>
-    <td th:text="${slot.endTime}"></td>
-    <td>
-      <form th:action="@{|/ui/vet/availability/${slot.id}/delete|}" method="post">
-        <button type="submit">Delete</button>
-      </form>
-    </td>
-  </tr>
-</table>
+    <!-- Messages -->
+    <div class="alert success" th:if="${successMessage}">
+        <span th:text="${successMessage}">Success</span>
+    </div>
 
-<button onclick="location.href='/ui/vet/home'">Back to Dashboard</button>
+    <div class="alert error" th:if="${errorMessage}">
+        <span th:text="${errorMessage}">Error</span>
+    </div>
+
+    <h1 class="page-title">Manage Availability</h1>
+    <p class="page-desc">Δήλωσε slots διαθεσιμότητας. Το σύστημα θα απορρίπτει επικαλύψεις.</p>
+
+    <div class="grid two">
+
+        <!-- LEFT: Add slot -->
+        <div class="card">
+            <h2>Add Slot</h2>
+
+            <form th:action="@{/ui/vet/availability}"
+                  th:object="${availabilityForm}"
+                  method="post">
+
+                <div class="field">
+                    <label for="startTime">Start</label>
+                    <input id="startTime" type="datetime-local" th:field="*{startTime}">
+                    <div class="small" style="color: rgba(239,68,68,0.95);"
+                         th:if="${#fields.hasErrors('startTime')}"
+                         th:errors="*{startTime}"></div>
+                </div>
+
+                <div class="field">
+                    <label for="endTime">End</label>
+                    <input id="endTime" type="datetime-local" th:field="*{endTime}">
+                    <div class="small" style="color: rgba(239,68,68,0.95);"
+                         th:if="${#fields.hasErrors('endTime')}"
+                         th:errors="*{endTime}"></div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn primary" type="submit">Add Slot</button>
+                    <button class="btn" type="button" onclick="location.href='/ui/vet/home'">Back</button>
+                </div>
+
+                <div class="help">
+                    Tip: Πρόσθεσε μεγαλύτερα blocks (π.χ. 09:00–12:00, 13:00–17:00) και άφησε το booking να “γεμίσει”.
+                </div>
+            </form>
+        </div>
+
+        <!-- RIGHT: Existing slots -->
+        <div class="card">
+            <h2>Existing Availability</h2>
+
+            <div th:if="${slots == null || slots.isEmpty()}" class="muted">
+                No availability slots yet.
+            </div>
+
+            <table class="table" th:if="${slots != null && !slots.isEmpty()}">
+                <thead>
+                <tr>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th style="width:120px;">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="slot : ${slots}">
+                    <td th:text="${slot.startTime}">start</td>
+                    <td th:text="${slot.endTime}">end</td>
+                    <td>
+                        <form th:action="@{|/ui/vet/availability/${slot.id}/delete|}"
+                              method="post"
+                              style="margin:0;">
+                            <button class="btn danger" type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+        </div>
+
+    </div>
+</div>
 
 </body>
 </html>

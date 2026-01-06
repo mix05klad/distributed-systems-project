@@ -1,14 +1,84 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
     <title>PetCare</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
-<h1>Welcome to PetCare</h1>
 
-<button onclick="window.location.href='/login'">Login</button>
-<button onclick="window.location.href='/register'">Register</button>
+<div class="container">
+
+    <!-- Top bar -->
+    <div class="topbar">
+        <div class="brand">
+            <div class="logo"></div>
+            <div>
+                <div>PetCare</div>
+                <div class="subtitle">Pet Appointment & Health History</div>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px; align-items:center;">
+            <button class="btn" type="button" onclick="location.href='/swagger-ui/index.html'">Swagger</button>
+            <button class="btn" type="button" onclick="location.href='/h2-console'">H2 Console</button>
+        </div>
+    </div>
+
+    <div class="grid two" style="margin-top:18px;">
+
+        <!-- Hero / intro -->
+        <div class="card">
+            <h1 class="page-title" style="margin:0 0 8px;">Welcome to PetCare</h1>
+            <p class="page-desc" style="margin:0;">
+                Διαχειρίσου κατοικίδια, κλείσε ραντεβού και κράτα ιστορικό επισκέψεων.
+                Οι κτηνίατροι δηλώνουν διαθεσιμότητα και ενημερώνουν σημειώσεις θεραπείας.
+            </p>
+
+            <div class="divider"></div>
+
+            <div class="actions">
+                <button class="btn primary" type="button" onclick="location.href='/login'">Login</button>
+                <button class="btn" type="button" onclick="location.href='/register'">Register</button>
+            </div>
+
+            <div class="help" style="margin-top:12px;">
+                Tip: Μετά το login θα γίνει αυτόματο redirect στο dashboard ανάλογα με τον ρόλο (OWNER / VET).
+            </div>
+        </div>
+
+        <!-- Quick info card -->
+        <div class="card">
+            <h2 style="margin-top:0;">What you can do</h2>
+
+            <div class="muted" style="margin-top:8px;">
+                <strong>Owner</strong>
+                <ul style="margin:8px 0 0 18px;">
+                    <li>Register pets</li>
+                    <li>Book appointments</li>
+                    <li>View medical/vaccine history</li>
+                </ul>
+            </div>
+
+            <div class="muted" style="margin-top:14px;">
+                <strong>Vet</strong>
+                <ul style="margin:8px 0 0 18px;">
+                    <li>Manage availability</li>
+                    <li>Confirm / cancel / complete appointments</li>
+                    <li>Record visit notes</li>
+                </ul>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="help">
+                Το REST API είναι διαθέσιμο μέσω Swagger και προστατεύεται με JWT (Authorize → Bearer token).
+            </div>
+        </div>
+
+    </div>
+</div>
 
 </body>
 </html>

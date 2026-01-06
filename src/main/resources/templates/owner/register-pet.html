@@ -1,51 +1,88 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="el">
 <head>
-  <meta charset="UTF-8">
-  <title>Register Pet</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>Register Pet</title>
 </head>
 <body>
-<h2>Register your new Pet</h2>
 
-<!-- Success message -->
-<div th:if="${successMessage}">
-  <p th:text="${successMessage}" style="color:green;"></p>
+<div class="container">
+
+    <!-- Top bar -->
+    <div class="topbar">
+        <div class="brand">
+            <div class="logo"></div>
+            <div>
+                <div>PetCare</div>
+                <div class="subtitle">Owner • Register Pet</div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn" type="button" onclick="location.href='/ui/owner/home'">Dashboard</button>
+            <form action="/logout" method="post" style="margin:0;">
+                <button class="btn danger" type="submit">Logout</button>
+            </form>
+        </div>
+    </div>
+
+    <h1 class="page-title">Register your new Pet</h1>
+    <p class="page-desc">Συμπλήρωσε τα στοιχεία του κατοικιδίου για να προστεθεί στο προφίλ σου.</p>
+
+    <!-- Success -->
+    <div th:if="${successMessage}" class="alert success">
+        <span th:text="${successMessage}">Success</span>
+    </div>
+
+    <div class="card center-card">
+
+        <form class="form"
+              th:action="@{/ui/owner/register-pet}"
+              th:object="${petForm}"
+              method="post">
+
+            <div class="field">
+                <label>Name</label>
+                <input th:field="*{name}" placeholder="e.g., Rex"/>
+                <div class="help-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+            </div>
+
+            <div class="field">
+                <label>Type</label>
+                <select th:field="*{type}">
+                    <option value="" disabled selected>-- Select type --</option>
+                    <option th:each="t : ${T(gr.hua.dit.petcare.core.model.PetType).values()}"
+                            th:value="${t}"
+                            th:text="${t}">
+                    </option>
+                </select>
+                <div class="help-error" th:if="${#fields.hasErrors('type')}" th:errors="*{type}"></div>
+            </div>
+
+            <div class="field">
+                <label>Breed</label>
+                <input th:field="*{breed}" placeholder="e.g., Labrador"/>
+                <div class="help-error" th:if="${#fields.hasErrors('breed')}" th:errors="*{breed}"></div>
+            </div>
+
+            <div class="field">
+                <label>Age (in years)</label>
+                <input type="number" th:field="*{age}" min="0" placeholder="e.g., 3"/>
+                <div class="help-error" th:if="${#fields.hasErrors('age')}" th:errors="*{age}"></div>
+            </div>
+
+            <div class="actions">
+                <button class="btn primary" type="submit">Register</button>
+                <button class="btn" type="button" onclick="location.href='/ui/owner/home'">Return</button>
+            </div>
+
+            <p class="help">Μετά την καταχώριση, θα μπορείς να κλείνεις ραντεβού για αυτό το pet.</p>
+        </form>
+
+    </div>
 </div>
-
-<form th:action="@{/ui/owner/register-pet}" th:object="${petForm}" method="post">
-  <div>
-    <label>Name</label>
-    <input th:field="*{name}" />
-    <div th:if="${#fields.hasErrors('name')}" th:errors="*{name}" style="color:red;"></div>
-  </div>
-
-  <div>
-    <label>Type</label>
-    <select th:field="*{type}">
-      <option th:each="t : ${T(gr.hua.dit.petcare.core.model.PetType).values()}"
-              th:value="${t}"
-              th:text="${t}">TYPE</option>
-    </select>
-    <div th:if="${#fields.hasErrors('type')}" th:errors="*{type}" style="color:red;"></div>
-  </div>
-
-  <div>
-    <label>Breed</label>
-    <input th:field="*{breed}" />
-    <div th:if="${#fields.hasErrors('breed')}" th:errors="*{breed}" style="color:red;"></div>
-  </div>
-
-  <div>
-    <label>Age (in years)</label>
-    <input type="number" th:field="*{age}" min="0" />
-    <div th:if="${#fields.hasErrors('age')}" th:errors="*{age}" style="color:red;"></div>
-  </div>
-
-  <div>
-    <button type="submit">Register</button>
-    <button type="button" onclick="location.href='/ui/owner/home'">Return</button>
-  </div>
-</form>
 
 </body>
 </html>

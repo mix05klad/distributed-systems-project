@@ -1,51 +1,74 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
-  <title>Register</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Register</title>
+
+    <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
 
-<h2>Register</h2>
+<div class="container">
+    <div class="topbar">
+        <div class="brand">
+            <div class="logo"></div>
+            <div>
+                <div>PetCare</div>
+                <div class="subtitle">Create your account</div>
+            </div>
+        </div>
+        <a class="btn link" th:href="@{/}">Back</a>
+    </div>
 
-<form method="post" th:object="${register}">
-  <div>
-    <label>Username</label>
-    <input th:field="*{username}" required />
-  </div>
+    <div class="card center-card">
+        <h1 class="page-title">Register</h1>
+        <p class="page-desc">Fill in your details to create an account.</p>
 
-  <div>
-    <label>Password</label>
-    <input type="password" th:field="*{password}" required />
-  </div>
+        <form method="post" th:action="@{/register}" th:object="${register}">
+            <div class="field">
+                <label for="regUsername">Username</label>
+                <input id="regUsername" th:field="*{username}" required>
+            </div>
 
-  <div>
-    <label>Full Name</label>
-    <input th:field="*{fullName}" required />
-  </div>
+            <div class="field">
+                <label for="regPassword">Password</label>
+                <input id="regPassword" type="password" th:field="*{password}" required>
+                <div class="help">Choose a strong password.</div>
+            </div>
 
-  <div>
-    <label>Email</label>
-    <input th:field="*{email}" required />
-  </div>
+            <div class="field">
+                <label for="regFullName">Full Name</label>
+                <input id="regFullName" th:field="*{fullName}" required>
+            </div>
 
-  <div>
-    <label>Phone</label>
-    <input th:field="*{phoneNumber}" required />
-  </div>
+            <div class="field">
+                <label for="regEmail">Email</label>
+                <input id="regEmail" type="email" th:field="*{email}" required>
+            </div>
 
-  <div>
-    <label>Role</label>
-    <select th:field="*{role}" required>
-      <option value="" disabled selected>Select role</option>
-      <option value="OWNER">Owner</option>
-      <option value="VET">Vet</option>
-    </select>
-  </div>
+            <div class="field">
+                <label for="regPhone">Phone</label>
+                <input id="regPhone" th:field="*{phoneNumber}" required>
+                <div class="help">Used for notifications (NOC + holiday warning uses date only).</div>
+            </div>
 
-  <button type="submit">Register</button>
-  <button type="button" onclick="location.href='/'">Back</button>
+            <div class="field">
+                <label for="regRole">Role</label>
+                <select id="regRole" th:field="*{role}" required>
+                    <option value="" disabled selected>Select role</option>
+                    <option value="OWNER">Owner</option>
+                    <option value="VET">Vet</option>
+                </select>
+            </div>
 
-</form>
+            <div class="actions">
+                <button class="btn success" type="submit">Create account</button>
+                <a class="btn" th:href="@{/login}">Already have an account?</a>
+            </div>
+        </form>
+    </div>
+</div>
 
 </body>
 </html>

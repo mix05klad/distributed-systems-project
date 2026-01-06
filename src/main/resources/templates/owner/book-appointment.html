@@ -3,177 +3,234 @@
 <head>
     <meta charset="UTF-8">
     <title>Book Appointment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
 
-<h2>Book Appointment</h2>
+<div class="container">
 
-<!-- Success -->
-<div th:if="${successMessage}">
-    <p th:text="${successMessage}" style="color:green;"></p>
-</div>
+    <!-- Top bar -->
+    <div class="topbar">
+        <div class="brand">
+            <div class="logo"></div>
+            <div>
+                <div>PetCare</div>
+                <div class="subtitle">Owner • Book appointment</div>
+            </div>
+        </div>
 
-<!-- Warning (non-blocking) -->
-<div th:if="${warningMessage}">
-    <p th:text="${warningMessage}"
-       style="color:#856404; background:#fff3cd; border:1px solid #ffeeba; padding:10px;"></p>
-</div>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <button class="btn" type="button" onclick="location.href='/ui/owner/home'">Dashboard</button>
 
-<div th:if="${errorMessage}">
-    <p th:text="${errorMessage}" style="color:red;"></p>
-</div>
-
-<form th:action="@{/ui/owner/book-appointment}"
-      th:object="${appointmentForm}"
-      method="post">
-
-    <!-- Pet -->
-    <div>
-        <label>Pet</label>
-        <select th:field="*{petId}">
-            <option value="" disabled
-                    th:selected="${appointmentForm.petId == null}">-- Select pet --</option>
-            <option th:each="p : ${pets}"
-                    th:value="${p.id}"
-                    th:text="${p.name}">
-            </option>
-        </select>
-        <div th:if="${#fields.hasErrors('petId')}"
-             th:errors="*{petId}" style="color:red;"></div>
+            <!-- logout πρέπει να είναι POST (Spring Security) -->
+            <form th:action="@{/logout}" method="post" style="margin:0;">
+                <button class="btn danger" type="submit">Logout</button>
+            </form>
+        </div>
     </div>
 
-    <!-- Vet -->
-    <div>
-        <label>Vet</label>
-        <select th:field="*{vetId}" id="vetSelect"
-                onchange="onVetChange(this)">
-            <option value="" disabled
-                    th:selected="${appointmentForm.vetId == null}">-- Select vet --</option>
-            <option th:each="v : ${vets}"
-                    th:value="${v.id}"
-                    th:text="${v.fullName}"></option>
-        </select>
-        <div th:if="${#fields.hasErrors('vetId')}"
-             th:errors="*{vetId}" style="color:red;"></div>
+    <!-- Messages -->
+    <div class="alert success" th:if="${successMessage}">
+        <span th:text="${successMessage}">Success</span>
     </div>
 
-    <!-- Εμφάνιση διαθεσιμότητας επιλεγμένου vet -->
-    <div th:if="${selectedVetAvailability != null}">
-        <h3>Availability for selected vet</h3>
-
-        <table border="1" th:if="${!selectedVetAvailability.isEmpty()}">
-            <tr>
-                <th>Start</th>
-                <th>End</th>
-            </tr>
-            <tr th:each="slot : ${selectedVetAvailability}">
-                <td th:text="${slot.startTime}">start</td>
-                <td th:text="${slot.endTime}">end</td>
-            </tr>
-        </table>
-
-        <p th:if="${selectedVetAvailability.isEmpty()}">
-            This vet has no declared availability.
-        </p>
+    <div class="alert warning" th:if="${warningMessage}">
+        <span th:text="${warningMessage}">Warning</span>
     </div>
 
-    <!-- Visit type -->
-    <div>
-        <label>Visit type</label>
-        <select th:field="*{visitType}">
-            <option value="" disabled
-                    th:selected="${appointmentForm.visitType == null}">
-                -- Select visit type --
-            </option>
-            <option th:each="t : ${T(gr.hua.dit.petcare.core.model.VisitType).values()}"
-                    th:value="${t}"
-                    th:text="${t}"></option>
-        </select>
-        <div th:if="${#fields.hasErrors('visitType')}"
-             th:errors="*{visitType}" style="color:red;"></div>
+    <div class="alert error" th:if="${errorMessage}">
+        <span th:text="${errorMessage}">Error</span>
     </div>
 
-    <!-- Start -->
-    <div>
-        <label>Start</label>
-        <input type="datetime-local" th:field="*{startTime}"/>
-        <div th:if="${#fields.hasErrors('startTime')}"
-             th:errors="*{startTime}" style="color:red;"></div>
+    <h1 class="page-title">Book Appointment</h1>
+    <p class="page-desc">Κλείσε ραντεβού με βάση τη διαθεσιμότητα του κτηνιάτρου.</p>
+
+    <div class="grid two">
+
+        <!-- LEFT: Booking form -->
+        <div class="card">
+            <h2>New appointment</h2>
+
+            <form th:action="@{/ui/owner/book-appointment}"
+                  th:object="${appointmentForm}"
+                  method="post">
+
+                <!-- Pet -->
+                <div class="field">
+                    <label for="petId">Pet</label>
+                    <select id="petId" th:field="*{petId}">
+                        <option value="" disabled th:selected="${appointmentForm.petId == null}">
+                            -- Select pet --
+                        </option>
+                        <option th:each="p : ${pets}"
+                                th:value="${p.id}"
+                                th:text="${p.name}">
+                        </option>
+                    </select>
+                    <div class="small" style="color: rgba(239,68,68,0.95);"
+                         th:if="${#fields.hasErrors('petId')}"
+                         th:errors="*{petId}"></div>
+                </div>
+
+                <!-- Vet -->
+                <div class="field">
+                    <label for="vetSelect">Vet</label>
+                    <select id="vetSelect" th:field="*{vetId}" onchange="onVetChange(this)">
+                        <option value="" disabled th:selected="${appointmentForm.vetId == null}">
+                            -- Select vet --
+                        </option>
+                        <option th:each="v : ${vets}"
+                                th:value="${v.id}"
+                                th:text="${v.fullName}">
+                        </option>
+                    </select>
+                    <div class="small" style="color: rgba(239,68,68,0.95);"
+                         th:if="${#fields.hasErrors('vetId')}"
+                         th:errors="*{vetId}"></div>
+                </div>
+
+                <!-- Visit type -->
+                <div class="field">
+                    <label for="visitType">Visit type</label>
+                    <select id="visitType" th:field="*{visitType}">
+                        <option value="" disabled th:selected="${appointmentForm.visitType == null}">
+                            -- Select visit type --
+                        </option>
+                        <option th:each="t : ${T(gr.hua.dit.petcare.core.model.VisitType).values()}"
+                                th:value="${t}"
+                                th:text="${t}">
+                        </option>
+                    </select>
+                    <div class="small" style="color: rgba(239,68,68,0.95);"
+                         th:if="${#fields.hasErrors('visitType')}"
+                         th:errors="*{visitType}"></div>
+                </div>
+
+                <!-- Start -->
+                <div class="field">
+                    <label for="startTime">Start</label>
+                    <input id="startTime" type="datetime-local" th:field="*{startTime}">
+                    <div class="small" style="color: rgba(239,68,68,0.95);"
+                         th:if="${#fields.hasErrors('startTime')}"
+                         th:errors="*{startTime}"></div>
+                </div>
+
+                <!-- End -->
+                <div class="field">
+                    <label for="endTime">End</label>
+                    <input id="endTime" type="datetime-local" th:field="*{endTime}">
+                    <div class="small" style="color: rgba(239,68,68,0.95);"
+                         th:if="${#fields.hasErrors('endTime')}"
+                         th:errors="*{endTime}"></div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn primary" type="submit">Book</button>
+                    <button class="btn" type="button" onclick="location.href='/ui/owner/home'">Back</button>
+                </div>
+
+                <div class="help">
+                    Tip: Διάλεξε πρώτα κτηνίατρο για να δεις τα διαθέσιμα slots.
+                </div>
+            </form>
+        </div>
+
+        <!-- RIGHT: Availability + My appointments -->
+        <div class="card">
+            <h2>Availability</h2>
+            <p class="muted" style="margin-top:-6px; margin-bottom:12px;">
+                Ελεύθερα slots (διαθεσιμότητα - ραντεβού).
+            </p>
+
+            <div th:if="${selectedVetAvailability == null}" class="muted">
+                Select a vet to view availability.
+            </div>
+
+            <div th:if="${selectedVetAvailability != null}">
+                <table class="table" th:if="${!selectedVetAvailability.isEmpty()}">
+                    <thead>
+                    <tr>
+                        <th>Start</th>
+                        <th>End</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="slot : ${selectedVetAvailability}">
+                        <td th:text="${slot.startTime}">start</td>
+                        <td th:text="${slot.endTime}">end</td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <div class="muted" th:if="${selectedVetAvailability.isEmpty()}">
+                    This vet has no declared availability (or no free time).
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <h2>Your Appointments</h2>
+
+            <table class="table" th:if="${appointments != null && !appointments.isEmpty()}">
+                <thead>
+                <tr>
+                    <th>Pet</th>
+                    <th>Vet</th>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="a : ${appointments}">
+                    <td th:text="${a.petName}">Pet</td>
+                    <td th:text="${a.vetName}">Vet</td>
+                    <td th:text="${a.startTime}">Start</td>
+                    <td th:text="${a.endTime}">End</td>
+                    <td th:text="${a.status}">Status</td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div class="muted" th:if="${appointments == null || appointments.isEmpty()}">
+                You have no appointments yet.
+            </div>
+        </div>
+
     </div>
-
-    <!-- End -->
-    <div>
-        <label>End</label>
-        <input type="datetime-local" th:field="*{endTime}"/>
-        <div th:if="${#fields.hasErrors('endTime')}"
-             th:errors="*{endTime}" style="color:red;"></div>
-    </div>
-
-    <div>
-        <button type="submit">Book</button>
-        <button type="button" onclick="location.href='/ui/owner/home'">Back to Dashboard</button>
-    </div>
-</form>
-
-<hr/>
-
-<h2>Your Appointments</h2>
-
-<table border="1" th:if="${appointments != null && !appointments.isEmpty()}">
-    <tr>
-        <th>Pet</th>
-        <th>Vet</th>
-        <th>Start</th>
-        <th>End</th>
-        <th>Status</th>
-    </tr>
-    <tr th:each="a : ${appointments}">
-        <td th:text="${a.petName}">Pet</td>
-        <td th:text="${a.vetName}">Vet</td>
-        <td th:text="${a.startTime}">Start</td>
-        <td th:text="${a.endTime}">End</td>
-        <td th:text="${a.status}">Status</td>
-    </tr>
-</table>
-
-<div th:if="${appointments == null || appointments.isEmpty()}">
-    <p>You have no appointments yet.</p>
 </div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
-        function onVetChange(selectElem) {
-            const vetId = selectElem.value;
-            if (!vetId) return;
+    function onVetChange(selectElem) {
+        const vetId = selectElem.value;
+        if (!vetId) return;
 
+        const url = new URL(window.location.href);
+        url.searchParams.set('vetId', vetId);
+        window.location.href = url.toString();
+    }
+
+    // true αν υπάρχει success ή error ή warning μήνυμα στο model
+    var hasMessage = /*[[${successMessage != null or errorMessage != null or warningMessage != null}]]*/ false;
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // Αν μόλις κάναμε book (ή υπήρξε σφάλμα), δεν γίνεται redirect
+        if (hasMessage) return;
+
+        const vetSelect = document.getElementById("vetSelect");
+        if (vetSelect && vetSelect.value) {
             const url = new URL(window.location.href);
-            url.searchParams.set('vetId', vetId);
-            window.location.href = url.toString();
+            if (!url.searchParams.has("vetId")) {
+                url.searchParams.set("vetId", vetSelect.value);
+                window.location.replace(url.toString());
+            }
         }
-
-        // true αν υπάρχει success ή error μήνυμα στο model
-        var hasMessage = /*[[${successMessage != null or warningMessage != null or errorMessage != null}]]*/ false;
-
-
-        document.addEventListener("DOMContentLoaded", function () {
-            // Αν μόλις κάναμε book , δεν κάνει redirect,
-            // ο χρήστης προλαβαίνει να δει το μνμ
-            if (hasMessage) {
-                return;
-            }
-
-            const vetSelect = document.getElementById("vetSelect");
-            if (vetSelect && vetSelect.value) {
-                const url = new URL(window.location.href);
-                if (!url.searchParams.has("vetId")) {
-                    url.searchParams.set("vetId", vetSelect.value);
-                    window.location.replace(url.toString());
-                }
-            }
-        });
+    });
     /*]]>*/
 </script>
-
 
 </body>
 </html>

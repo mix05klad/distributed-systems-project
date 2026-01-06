@@ -1,18 +1,51 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
-  <title>Owner Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Owner Dashboard</title>
+
+    <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
-<h1>Welcome Owner</h1>
 
-<button onclick="location.href='/ui/owner/register-pet'">Register Pet</button>
-<button onclick="location.href='/ui/owner/book-appointment'">Book Appointment</button>
-<button onclick="location.href='/ui/owner/pet-history'">View Pet Medical History</button>
+<div class="container">
+    <div class="topbar">
+        <div class="brand">
+            <div class="logo"></div>
+            <div>
+                <div>PetCare</div>
+                <div class="subtitle">Owner dashboard</div>
+            </div>
+        </div>
 
-<form action="/logout" method="post" style="margin-top: 10px;">
-  <button type="submit">Logout</button>
-</form>
+        <form th:action="@{/logout}" method="post" style="margin:0;">
+            <button class="btn danger" type="submit">Logout</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h1 class="page-title">Welcome, Owner</h1>
+        <p class="page-desc">Choose an action below.</p>
+
+        <div class="quick-actions">
+            <a class="tile" th:href="@{/ui/owner/register-pet}">
+                <p class="tile-title">Register Pet</p>
+                <p class="tile-desc">Add a new pet with type, breed and age.</p>
+            </a>
+
+            <a class="tile" th:href="@{/ui/owner/book-appointment}">
+                <p class="tile-title">Book Appointment</p>
+                <p class="tile-desc">Create an appointment request (PENDING).</p>
+            </a>
+
+            <a class="tile" th:href="@{/ui/owner/pet-history}">
+                <p class="tile-title">Pet Medical History</p>
+                <p class="tile-desc">View completed visits, vaccines and notes.</p>
+            </a>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>

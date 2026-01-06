@@ -1,91 +1,166 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="el">
 <head>
-  <meta charset="UTF-8">
-  <title>Vet Appointments</title>
+    <meta charset="UTF-8">
+    <title>Vet Appointments</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
 
-<h1>My Appointments</h1>
+<div class="container">
 
-<div th:if="${successMessage}">
-  <p th:text="${successMessage}" style="color:green;"></p>
+    <!-- Top bar -->
+    <div class="topbar">
+        <div class="brand">
+            <div class="logo"></div>
+            <div>
+                <div>PetCare</div>
+                <div class="subtitle">Vet • Appointments</div>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px; align-items:center;">
+            <button class="btn" type="button" onclick="location.href='/ui/vet/home'">Dashboard</button>
+
+            <form th:action="@{/logout}" method="post" style="margin:0;">
+                <button class="btn danger" type="submit">Logout</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="alert success" th:if="${successMessage}">
+        <span th:text="${successMessage}">Success</span>
+    </div>
+
+    <div class="alert error" th:if="${errorMessage}">
+        <span th:text="${errorMessage}">Error</span>
+    </div>
+
+    <h1 class="page-title">My Appointments</h1>
+    <p class="page-desc">Διαχειρίσου αιτήματα ραντεβού (confirm/cancel/complete) και πρόσθεσε σημειώσεις.</p>
+
+    <div class="grid two">
+
+        <!-- LEFT: Filter card -->
+        <div class="card">
+            <h2>Filter</h2>
+            <div class="help">
+                Εδώ μπορείς να εμφανίσεις ή να κρύψεις τα ολοκληρωμένα ραντεβού.
+            </div>
+
+            <div class="actions" style="margin-top:12px;">
+                <a class="btn primary" th:if="${!showCompleted}"
+                   th:href="@{/ui/vet/appointments(showCompleted=true)}">
+                    Show completed
+                </a>
+
+                <a class="btn" th:if="${showCompleted}"
+                   th:href="@{/ui/vet/appointments(showCompleted=false)}">
+                    Hide completed
+                </a>
+
+                <button class="btn" type="button" onclick="location.href='/ui/vet/record-notes'">
+                    Record notes
+                </button>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="muted">
+                Tip: Τα κουμπιά ενεργοποιούνται ανάλογα με το status:
+                PENDING → Confirm/Cancel, CONFIRMED → Complete/Cancel, COMPLETED → Notes.
+            </div>
+        </div>
+
+        <!-- RIGHT: Table card -->
+        <div class="card">
+            <h2>Appointments</h2>
+
+            <div th:if="${appointments == null || appointments.isEmpty()}" class="muted">
+                No appointments found.
+            </div>
+
+            <table class="table" th:if="${appointments != null && !appointments.isEmpty()}">
+                <thead>
+                <tr>
+                    <th>Pet</th>
+                    <th>Owner/Vet</th>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th>Status</th>
+                    <th>Notes</th>
+                    <th style="width:260px;">Actions</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="a : ${appointments}">
+                    <td th:text="${a.petName}">Pet</td>
+
+                    <td th:text="${a.vetName}">Vet</td>
+
+                    <td th:text="${a.startTime}">Start</td>
+                    <td th:text="${a.endTime}">End</td>
+
+                    <td th:text="${a.status}">Status</td>
+
+                    <td>
+                        <span th:if="${a.vetNotes != null and !#strings.isEmpty(a.vetNotes)}">✔</span>
+                        <span th:if="${a.vetNotes == null or #strings.isEmpty(a.vetNotes)}">—</span>
+                    </td>
+
+                    <td>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+
+                            <!-- Confirm μόνο όταν είναι PENDING -->
+                            <form th:if="${a.status != null and a.status.toString() == 'PENDING'}"
+                                  th:action="@{|/ui/vet/appointments/${a.id}/confirm|}"
+                                  method="post"
+                                  style="margin:0;">
+                                <button class="btn primary" type="submit">Confirm</button>
+                            </form>
+
+                            <!-- Complete όταν είναι CONFIRMED -->
+                            <form th:if="${a.status != null and a.status.toString() == 'CONFIRMED'}"
+                                  th:action="@{|/ui/vet/appointments/${a.id}/complete|}"
+                                  method="post"
+                                  style="margin:0;">
+                                <button class="btn primary" type="submit">Complete</button>
+                            </form>
+
+                            <!-- Cancel όταν είναι PENDING ή CONFIRMED -->
+                            <form th:if="${a.status != null and (a.status.toString() == 'PENDING' or a.status.toString() == 'CONFIRMED')}"
+                                  th:action="@{|/ui/vet/appointments/${a.id}/cancel|}"
+                                  method="post"
+                                  style="margin:0;">
+                                <button class="btn danger" type="submit">Cancel</button>
+                            </form>
+
+                            <!-- Notes μόνο όταν είναι COMPLETED -->
+                            <form th:if="${a.status != null and a.status.toString() == 'COMPLETED'}"
+                                  th:action="@{|/ui/vet/appointments/${a.id}/notes|}"
+                                  method="get"
+                                  style="margin:0;">
+                                <button class="btn" type="submit">Notes</button>
+                            </form>
+
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div class="actions" style="margin-top:14px;">
+                <button class="btn" type="button" onclick="location.href='/ui/vet/home'">
+                    Back to Vet Dashboard
+                </button>
+            </div>
+        </div>
+
+    </div>
 </div>
-
-<div th:if="${errorMessage}">
-  <p th:text="${errorMessage}" style="color:red;"></p>
-</div>
-
-<div>
-  <a th:if="${!showCompleted}"
-     th:href="@{/ui/vet/appointments(showCompleted=true)}">Show completed</a>
-  <a th:if="${showCompleted}"
-     th:href="@{/ui/vet/appointments(showCompleted=false)}">Hide completed</a>
-</div>
-
-<table border="1" th:if="${appointments != null && !appointments.isEmpty()}">
-  <tr>
-    <th>Pet</th>
-    <th>Vet</th>
-    <th>Start</th>
-    <th>End</th>
-    <th>Status</th>
-    <th>Notes</th>
-    <th>Actions</th>
-  </tr>
-  <tr th:each="a : ${appointments}">
-    <td th:text="${a.petName}">Pet</td>
-    <td th:text="${a.vetName}">Vet</td>
-    <td th:text="${a.startTime}">Start</td>
-    <td th:text="${a.endTime}">End</td>
-    <td th:text="${a.status}">Status</td>
-    <td>
-      <span th:if="${a.vetNotes != null and !#strings.isEmpty(a.vetNotes)}">✔</span>
-      <span th:if="${a.vetNotes == null or #strings.isEmpty(a.vetNotes)}">—</span>
-    </td>
-    <td>
-      <!-- Confirm μόνο όταν είναι PENDING -->
-      <form th:if="${a.status != null and a.status.toString() == 'PENDING'}"
-            th:action="@{|/ui/vet/appointments/${a.id}/confirm|}"
-            method="post"
-            style="display:inline">
-        <button type="submit">Confirm</button>
-      </form>
-
-      <!-- Complete όταν είναι CONFIRMED -->
-      <form th:if="${a.status != null and a.status.toString() == 'CONFIRMED'}"
-            th:action="@{|/ui/vet/appointments/${a.id}/complete|}"
-            method="post"
-            style="display:inline">
-        <button type="submit">Complete</button>
-      </form>
-
-      <!-- Cancel όταν είναι PENDING ή CONFIRMED -->
-      <form th:if="${a.status != null and (a.status.toString() == 'PENDING' or a.status.toString() == 'CONFIRMED')}"
-            th:action="@{|/ui/vet/appointments/${a.id}/cancel|}"
-            method="post"
-            style="display:inline">
-        <button type="submit">Cancel</button>
-      </form>
-
-      <!-- Notes μόνο όταν είναι COMPLETED -->
-      <form th:if="${a.status != null and a.status.toString() == 'COMPLETED'}"
-            th:action="@{|/ui/vet/appointments/${a.id}/notes|}"
-            method="get"
-            style="display:inline">
-        <button type="submit">Notes</button>
-      </form>
-    </td>
-  </tr>
-</table>
-
-<div th:if="${appointments == null || appointments.isEmpty()}">
-  <p>No appointments found.</p>
-</div>
-
-<button type="button" onclick="location.href='/ui/vet/home'">
-  Back to Vet Dashboard
-</button>
 
 </body>
 </html>
