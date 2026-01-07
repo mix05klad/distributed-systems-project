@@ -50,7 +50,7 @@ public class SecurityConfig {
                 // κρατάμε disabled για να μη σπάσουν τα forms σου
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/error", "/favicon.ico", "/images/**").permitAll()
 
                         // Role locks για UI
                         .requestMatchers("/ui/owner/**").hasRole("OWNER")
