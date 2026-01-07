@@ -83,7 +83,7 @@ public class OwnerAppointmentController {
                     "Το ραντεβού καταχωρήθηκε (PENDING) και αναμένει επιβεβαίωση από τον κτηνίατρο.");
 
             if (created.getWarnings() != null && !created.getWarnings().isEmpty()) {
-                // είτε δείξε μόνο το πρώτο:
+                // είτε μόνο το πρώτο:
                 //redirectAttributes.addFlashAttribute("warningMessage", created.getWarnings().get(0));
 
                 redirectAttributes.addFlashAttribute("warningMessage", String.join(" ", created.getWarnings()));

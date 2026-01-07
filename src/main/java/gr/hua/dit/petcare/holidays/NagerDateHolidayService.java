@@ -24,7 +24,7 @@ public class NagerDateHolidayService implements HolidayService {
     @Value("${holidays.country-code:GR}")
     private String countryCode;
 
-    // Cache by year για να μην χτυπάμε συνέχεια το API
+    // Cache by year για να μη χτυπάμε συνέχεια το API
     private final Map<Integer, List<HolidayDto>> yearCache = new ConcurrentHashMap<>();
 
     public NagerDateHolidayService(RestTemplate restTemplate) {

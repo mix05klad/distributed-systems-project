@@ -86,7 +86,6 @@ public class PetServiceImpl implements PetService {
     @Override
     @Transactional
     public void deletePet(Long petId, Long requesterId) {
-        // πιο “καθαρό”: delete με owner restriction (αν το repository σου έχει deleteByIdAndOwnerId)
         long deleted = petRepository.deleteByIdAndOwnerId(petId, requesterId);
         if (deleted == 0) {
             // είτε δεν υπάρχει pet είτε δεν είσαι owner

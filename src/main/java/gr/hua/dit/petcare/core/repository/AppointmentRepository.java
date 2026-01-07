@@ -52,7 +52,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     // χρήσιμο για vet-only actions (confirm/complete/notes)
     Optional<Appointment> findByIdAndVetId(Long id, Long vetId);
 
-    // χρήσιμο για owner-only actions (cancel / view details)
+    // χρήσιμο για owner-only actions ( view details)
     @Query("""
         select a
         from Appointment a
@@ -62,7 +62,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     Optional<Appointment> findByIdAndOwnerId(@Param("appointmentId") Long appointmentId,
                                              @Param("ownerId") Long ownerId);
 
-    // pending για vet (συχνό UI/REST endpoint)
     @Query("""
         select a
         from Appointment a

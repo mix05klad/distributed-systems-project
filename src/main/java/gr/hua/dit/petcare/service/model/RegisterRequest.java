@@ -23,7 +23,6 @@ public class RegisterRequest {
     @Size(max = 150, message = "email too long")
     private String email;
 
-    // απλό validation για τηλέφωνο (επιτρέπει +, κενά, παύλες)
     @Pattern(
             regexp = "^[0-9+\\-\\s]{6,30}$",
             message = "phoneNumber must contain only digits, spaces, + or - (6-30 chars)"

@@ -62,7 +62,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception ex) {
-            // Αν κάτι πάει στραβά (expired/invalid token), καθαρίζουμε το context
+            // Αν expired/invalid token καθαρίζουμε το context
             SecurityContextHolder.clearContext();
             logger.debug("JWT authentication failed: {}", ex.getMessage());
         }

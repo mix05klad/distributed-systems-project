@@ -30,7 +30,6 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), req.getRequestURI(), null);
     }
 
-    // αν κάπου έχει μείνει SecurityException από παλιότερο code
     @ExceptionHandler(SecurityException.class)
     public ResponseEntity<?> handleSecurity(SecurityException ex, HttpServletRequest req) {
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), req.getRequestURI(), null);

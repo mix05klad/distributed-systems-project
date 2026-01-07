@@ -2,7 +2,7 @@ package gr.hua.dit.petcare.security;
 
 /**
  * Ρόλοι της εφαρμογής.
- * Συνήθως τους αποθηκεύουμε στον User ως strings: "OWNER", "VET", "ADMIN".
+ * Στον User ως strings: "OWNER", "VET", "ADMIN".
  */
 public enum Role {
     OWNER,

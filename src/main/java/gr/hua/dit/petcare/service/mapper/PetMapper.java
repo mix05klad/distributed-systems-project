@@ -13,7 +13,7 @@ public interface PetMapper {
     @Mapping(source = "owner.fullName", target = "ownerName")
     PetView toView(Pet pet);
 
-    // δημιουργία Pet entity (owner μπαίνει από service, όχι από request)
+    // δημιουργία Pet entity
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "owner", ignore = true)
     Pet toEntity(CreatePetRequest req);

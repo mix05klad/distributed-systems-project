@@ -19,7 +19,6 @@ import java.util.List;
 @Transactional
 public class VetAvailabilityServiceImpl implements VetAvailabilityService {
 
-    // για να αποφύγεις ακραίες καταχωρήσεις (π.χ. 5 μέρες availability)
     private static final Duration MAX_SLOT_DURATION = Duration.ofHours(12);
 
     private final VetAvailabilityRepository availabilityRepository;
@@ -44,7 +43,7 @@ public class VetAvailabilityServiceImpl implements VetAvailabilityService {
             throw new IllegalArgumentException("End time must be after start time");
         }
 
-        // Μην επιτρέπεις availability στο παρελθόν (πολύ χρήσιμο στην πράξη)
+        // οχι availability στο παρελθόν
         LocalDateTime now = LocalDateTime.now();
         if (end.isBefore(now)) {
             throw new IllegalArgumentException("Availability slot cannot be in the past");

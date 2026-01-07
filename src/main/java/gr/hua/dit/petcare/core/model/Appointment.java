@@ -171,7 +171,6 @@ public class Appointment {
         this.vetNotes = vetNotes != null ? vetNotes.trim() : null;
     }
 
-    // καλό να ΜΗΝ το πειράζεις από έξω, αλλά το αφήνω για συμβατότητα
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }

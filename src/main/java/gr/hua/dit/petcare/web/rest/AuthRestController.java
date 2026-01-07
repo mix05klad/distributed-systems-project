@@ -49,7 +49,6 @@ public class AuthRestController {
         resp.setPhoneNumber(user.getPhoneNumber());
         resp.setRoles(user.getRoles().stream().toList());
 
-        // Θα μπορούσες και CREATED(201), αλλά OK για εργασία να μείνει 200
         return ResponseEntity.ok(resp);
     }
 
@@ -77,7 +76,6 @@ public class AuthRestController {
 
             return ResponseEntity.ok(resp);
         } catch (BadCredentialsException ex) {
-            // Επιστρέφουμε καθαρό JSON σώμα (βοηθάει debugging/Swagger)
             Map<String, Object> body = new HashMap<>();
             body.put("timestamp", Instant.now().toString());
             body.put("status", HttpStatus.UNAUTHORIZED.value());
@@ -89,9 +87,6 @@ public class AuthRestController {
         }
     }
 
-    // =========================
-    // DTOs (μπορείς αργότερα να τα βγάλεις σε ξεχωριστό package)
-    // =========================
 
     public static class LoginRequest {
 

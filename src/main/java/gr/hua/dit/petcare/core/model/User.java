@@ -28,7 +28,6 @@ public class User {
     @Column(length = 30)
     private String phoneNumber;
 
-    // Χρήσιμο για future-proof security (lock/disable users)
     @Column(nullable = false)
     private boolean enabled = true;
 

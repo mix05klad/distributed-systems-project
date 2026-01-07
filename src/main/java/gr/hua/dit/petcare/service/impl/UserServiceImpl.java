@@ -28,7 +28,6 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public User register(RegisterRequest req) {
 
-        // έξτρα ασφάλεια: trim username για να μην περνάει " user " ως διαφορετικό
         String username = req.getUsername().trim();
 
         if (userRepository.existsByUsername(username)) {
@@ -56,8 +55,6 @@ public class UserServiceImpl implements UserService {
         u.setPhoneNumber(req.getPhoneNumber());
         u.setRoles(Set.of(role.name())); // αποθηκεύουμε ως "OWNER" ή "VET"
 
-        // Αν έχεις κρατήσει το enabled field στο User (που σου πρότεινα πριν), το βάζουμε true
-        // Αν δεν υπάρχει enabled στο entity, απλά σβήσε την επόμενη γραμμή.
         u.setEnabled(true);
 
         return userRepository.save(u);
