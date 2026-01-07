@@ -1,8 +1,8 @@
 package gr.hua.dit.petcare.web.rest;
 
 import gr.hua.dit.petcare.core.model.User;
-import gr.hua.dit.petcare.core.repository.UserRepository;
 import gr.hua.dit.petcare.security.ApplicationUserDetails;
+import gr.hua.dit.petcare.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,10 +14,10 @@ import java.util.List;
 @RequestMapping("/api/users")
 public class UserRestController {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public UserRestController(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public UserRestController(UserService userService) {
+        this.userService = userService;
     }
 
     // Τρέχων χρήστης (profile)
@@ -25,8 +25,7 @@ public class UserRestController {
     public ResponseEntity<CurrentUserView> getCurrentUser() {
         ApplicationUserDetails details = getCurrentUserDetails();
 
-        User user = userRepository.findById(details.getId())
-                .orElseThrow(() -> new IllegalStateException("Current user not found"));
+        User user = userService.getById(details.getId());
 
         CurrentUserView view = new CurrentUserView();
         view.setId(user.getId());
@@ -34,7 +33,7 @@ public class UserRestController {
         view.setFullName(user.getFullName());
         view.setEmail(user.getEmail());
         view.setPhoneNumber(user.getPhoneNumber());
-        view.setRoles(user.getRoles().stream().toList());
+        view.setRoles(user.getRoles() != null ? user.getRoles().stream().toList() : List.of());
 
         return ResponseEntity.ok(view);
     }
@@ -42,8 +41,7 @@ public class UserRestController {
     // Λίστα όλων των VET
     @GetMapping("/vets")
     public ResponseEntity<List<VetSummaryView>> getAllVets() {
-        List<VetSummaryView> vets = userRepository.findAll().stream()
-                .filter(u -> u.getRoles().stream().anyMatch(r -> r.equalsIgnoreCase("VET")))
+        List<VetSummaryView> vets = userService.getAllVets().stream()
                 .map(u -> new VetSummaryView(
                         u.getId(),
                         u.getFullName(),
@@ -57,7 +55,8 @@ public class UserRestController {
 
     private ApplicationUserDetails getCurrentUserDetails() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        Object principal = auth.getPrincipal();
+        Object principal = auth != null ? auth.getPrincipal() : null;
+
         if (principal instanceof ApplicationUserDetails details) {
             return details;
         }
@@ -73,53 +72,23 @@ public class UserRestController {
         private String phoneNumber;
         private List<String> roles;
 
-        public Long getId() {
-            return id;
-        }
+        public Long getId() { return id; }
+        public void setId(Long id) { this.id = id; }
 
-        public void setId(Long id) {
-            this.id = id;
-        }
+        public String getUsername() { return username; }
+        public void setUsername(String username) { this.username = username; }
 
-        public String getUsername() {
-            return username;
-        }
+        public String getFullName() { return fullName; }
+        public void setFullName(String fullName) { this.fullName = fullName; }
 
-        public void setUsername(String username) {
-            this.username = username;
-        }
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
 
-        public String getFullName() {
-            return fullName;
-        }
+        public String getPhoneNumber() { return phoneNumber; }
+        public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
 
-        public void setFullName(String fullName) {
-            this.fullName = fullName;
-        }
-
-        public String getEmail() {
-            return email;
-        }
-
-        public void setEmail(String email) {
-            this.email = email;
-        }
-
-        public String getPhoneNumber() {
-            return phoneNumber;
-        }
-
-        public void setPhoneNumber(String phoneNumber) {
-            this.phoneNumber = phoneNumber;
-        }
-
-        public List<String> getRoles() {
-            return roles;
-        }
-
-        public void setRoles(List<String> roles) {
-            this.roles = roles;
-        }
+        public List<String> getRoles() { return roles; }
+        public void setRoles(List<String> roles) { this.roles = roles; }
     }
 
     public record VetSummaryView(

@@ -13,9 +13,8 @@ public class RestClientConfig {
     @Bean
     public RestTemplate restTemplate(RestTemplateBuilder builder) {
         return builder
-                // αν το NOC πέσει, να μην περιμένει για πάντα
-                .setConnectTimeout(Duration.ofSeconds(2))
-                .setReadTimeout(Duration.ofSeconds(3))
+                .connectTimeout(Duration.ofSeconds(3))
+                .readTimeout(Duration.ofSeconds(5))
                 .build();
     }
 }

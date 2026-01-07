@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -34,7 +35,6 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Username already in use");
         }
 
-        // επιβεβαίωση ρόλου μέσω του enum
         String roleStr = req.getRole();
         if (roleStr == null || roleStr.isBlank()) {
             throw new IllegalArgumentException("Role is required");
@@ -53,10 +53,33 @@ public class UserServiceImpl implements UserService {
         u.setFullName(req.getFullName().trim());
         u.setEmail(req.getEmail());
         u.setPhoneNumber(req.getPhoneNumber());
-        u.setRoles(Set.of(role.name())); // αποθηκεύουμε ως "OWNER" ή "VET"
-
+        u.setRoles(Set.of(role.name())); // "OWNER" ή "VET"
         u.setEnabled(true);
 
         return userRepository.save(u);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public User getById(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("User id is required");
+        }
+        return userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public User getCurrentUser(Long userId) {
+        return getById(userId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<User> getAllVets() {
+        return userRepository.findAll().stream()
+                .filter(u -> u.getRoles() != null && u.getRoles().stream().anyMatch(r -> r.equalsIgnoreCase("VET")))
+                .toList();
     }
 }

@@ -4,10 +4,10 @@ import gr.hua.dit.petcare.core.model.User;
 import gr.hua.dit.petcare.security.ApplicationUserDetails;
 import gr.hua.dit.petcare.service.AppointmentService;
 import gr.hua.dit.petcare.service.PetService;
+import gr.hua.dit.petcare.service.UserService;
 import gr.hua.dit.petcare.service.model.AppointmentView;
 import gr.hua.dit.petcare.service.model.CreateAppointmentRequest;
 import gr.hua.dit.petcare.service.model.VetFreeSlotView;
-import gr.hua.dit.petcare.core.repository.UserRepository;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -24,14 +24,14 @@ public class OwnerAppointmentController {
 
     private final AppointmentService appointmentService;
     private final PetService petService;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     public OwnerAppointmentController(AppointmentService appointmentService,
                                       PetService petService,
-                                      UserRepository userRepository) {
+                                      UserService userService) {
         this.appointmentService = appointmentService;
         this.petService = petService;
-        this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @GetMapping("/book-appointment")
@@ -46,7 +46,6 @@ public class OwnerAppointmentController {
             if (vetId != null) form.setVetId(vetId);
             model.addAttribute("appointmentForm", form);
         } else {
-            // αν ήρθε από redirect με form, αλλά έχει και vetId param, κράτα το
             CreateAppointmentRequest form = (CreateAppointmentRequest) model.getAttribute("appointmentForm");
             if (form != null && form.getVetId() == null && vetId != null) {
                 form.setVetId(vetId);
@@ -83,9 +82,6 @@ public class OwnerAppointmentController {
                     "Το ραντεβού καταχωρήθηκε (PENDING) και αναμένει επιβεβαίωση από τον κτηνίατρο.");
 
             if (created.getWarnings() != null && !created.getWarnings().isEmpty()) {
-                // είτε μόνο το πρώτο:
-                //redirectAttributes.addFlashAttribute("warningMessage", created.getWarnings().get(0));
-
                 redirectAttributes.addFlashAttribute("warningMessage", String.join(" ", created.getWarnings()));
             }
 
@@ -101,9 +97,7 @@ public class OwnerAppointmentController {
     private void populatePetsAndVets(Model model, Long ownerId) {
         model.addAttribute("pets", petService.getPetsForOwner(ownerId));
 
-        List<User> vets = userRepository.findAll().stream()
-                .filter(u -> u.getRoles().stream().anyMatch(r -> r.equalsIgnoreCase("VET")))
-                .toList();
+        List<User> vets = userService.getAllVets();
         model.addAttribute("vets", vets);
     }
 
