@@ -27,6 +27,15 @@ public class AppointmentView {
 
     private List<String> warnings;
 
+    private boolean petDeleted;
+
+    public boolean isPetDeleted() {
+        return petDeleted;
+    }
+
+    public void setPetDeleted(boolean petDeleted) {
+        this.petDeleted = petDeleted;
+    }
 
     public Long getId() {
         return id;

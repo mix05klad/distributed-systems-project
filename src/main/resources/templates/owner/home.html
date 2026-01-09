@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Owner Dashboard</title>
-
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
 
 <div class="container">
+
+    <!-- Top bar -->
     <div class="topbar">
         <div class="brand">
             <div class="logo"></div>
@@ -24,10 +25,20 @@
         </form>
     </div>
 
+    <!-- Flash messages -->
+    <div class="alert success" th:if="${successMessage}">
+        <span th:text="${successMessage}">Success</span>
+    </div>
+
+    <div class="alert error" th:if="${errorMessage}">
+        <span th:text="${errorMessage}">Error</span>
+    </div>
+
     <div class="card">
         <h1 class="page-title">Welcome, Owner</h1>
         <p class="page-desc">Choose an action below.</p>
 
+        <!-- Quick actions -->
         <div class="quick-actions">
             <a class="tile" th:href="@{/ui/owner/register-pet}">
                 <p class="tile-title">Register Pet</p>
@@ -44,7 +55,55 @@
                 <p class="tile-desc">View completed visits, vaccines and notes.</p>
             </a>
         </div>
+
+        <div class="divider"></div>
+
+        <!-- Pets list -->
+        <h2 style="margin:0 0 10px;">My Pets</h2>
+        <p class="muted" style="margin:0 0 12px;">
+            Here you can see the pets you have registered.
+        </p>
+
+        <div class="muted" th:if="${pets == null || pets.isEmpty()}">
+            You haven't registered any pets yet.
+        </div>
+
+        <table class="table" th:if="${pets != null && !pets.isEmpty()}">
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Breed</th>
+                <th>Age</th>
+                <th style="width:140px;">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="p : ${pets}">
+                <td th:text="${p.name}">name</td>
+                <td th:text="${p.type}">type</td>
+                <td th:text="${p.breed != null and !#strings.isEmpty(p.breed) ? p.breed : '—'}">breed</td>
+                <td th:text="${p.age != null ? p.age : '—'}">age</td>
+                <td>
+                    <!-- DELETE (POST) -->
+                    <form th:action="@{|/ui/owner/pets/${p.id}/delete|}"
+                          method="post"
+                          style="margin:0;">
+                        <button class="btn danger" type="submit"
+                                onclick="return confirm('Delete this pet?');">
+                            Delete
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="help" style="margin-top:12px;">
+            Note: Delete is a soft-delete (so it won’t break existing appointments).
+        </div>
     </div>
+
 </div>
 
 </body>

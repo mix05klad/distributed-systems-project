@@ -4,6 +4,7 @@ import gr.hua.dit.petcare.core.model.Appointment;
 import gr.hua.dit.petcare.core.model.AppointmentStatus;
 import gr.hua.dit.petcare.core.model.VisitType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -91,4 +92,19 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("ownerId") Long ownerId,
             @Param("petId") Long petId
     );
+
+    // ακύρωση μελλοντικών PENDING/CONFIRMED όταν γίνεται delete pet
+    @Modifying
+    @Query("""
+        update Appointment a
+           set a.status = gr.hua.dit.petcare.core.model.AppointmentStatus.CANCELLED
+         where a.pet.id = :petId
+           and a.status in (
+                gr.hua.dit.petcare.core.model.AppointmentStatus.PENDING,
+                gr.hua.dit.petcare.core.model.AppointmentStatus.CONFIRMED
+           )
+           and a.startTime >= :now
+    """)
+    int cancelFutureActiveAppointmentsForPet(@Param("petId") Long petId,
+                                             @Param("now") LocalDateTime now);
 }

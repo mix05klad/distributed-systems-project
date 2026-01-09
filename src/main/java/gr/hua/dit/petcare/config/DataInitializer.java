@@ -94,6 +94,8 @@ public class DataInitializer {
             rex.setBreed("Labrador");
             rex.setAge(3);
             rex.setOwner(owner1);
+            rex.setDeleted(false);
+            rex.setDeletedAt(null);
             rex = petRepository.save(rex);
 
             Pet bella = new Pet();
@@ -102,6 +104,8 @@ public class DataInitializer {
             bella.setBreed("Siamese");
             bella.setAge(2);
             bella.setOwner(owner1);
+            bella.setDeleted(false);
+            bella.setDeletedAt(null);
             bella = petRepository.save(bella);
 
             Pet max = new Pet();
@@ -110,6 +114,8 @@ public class DataInitializer {
             max.setBreed("German Shepherd");
             max.setAge(4);
             max.setOwner(owner2);
+            max.setDeleted(false);
+            max.setDeletedAt(null);
             max = petRepository.save(max);
 
             // 3. Διαθεσιμότητες κτηνιάτρων (VetAvailability)

@@ -120,6 +120,12 @@ public class VetAppointmentController {
             return "redirect:/ui/vet/appointments";
         }
 
+        if (view.isPetDeleted()) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Cannot add/edit notes: this pet has been deleted by the owner.");
+            return "redirect:/ui/vet/appointments";
+        }
+
         if (!model.containsAttribute("notesForm")) {
             VisitNotesRequest form = new VisitNotesRequest();
             form.setNotes(view.getVetNotes());

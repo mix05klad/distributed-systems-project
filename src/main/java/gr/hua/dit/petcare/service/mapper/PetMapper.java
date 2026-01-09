@@ -16,5 +16,7 @@ public interface PetMapper {
     // δημιουργία Pet entity
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "owner", ignore = true)
+    @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     Pet toEntity(CreatePetRequest req);
 }

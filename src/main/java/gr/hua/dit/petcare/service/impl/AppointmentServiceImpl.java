@@ -76,6 +76,10 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new IllegalArgumentException("Selected user is not a vet");
         }
 
+        if (pet.isDeleted()) {
+            throw new IllegalStateException("Cannot create appointment: pet is deleted.");
+        }
+
         LocalDateTime start = req.getStartTime();
         LocalDateTime end = req.getEndTime();
 
@@ -264,6 +268,11 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         if (!a.getVet().getId().equals(vetId)) {
             throw new AccessDeniedException("You are not the vet for this appointment");
+        }
+
+        // αν ο owner έχει κάνει soft-delete το pet, κλειδώνουμε τα notes
+        if (a.getPet() != null && a.getPet().isDeleted()) {
+            throw new IllegalStateException("Cannot update visit notes: this pet has been deleted by the owner.");
         }
 
         if (a.getStatus() != AppointmentStatus.COMPLETED) {

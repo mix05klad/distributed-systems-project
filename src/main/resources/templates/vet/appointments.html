@@ -138,13 +138,20 @@
                                 <button class="btn danger" type="submit">Cancel</button>
                             </form>
 
-                            <!-- Notes μόνο όταν είναι COMPLETED -->
-                            <form th:if="${a.status != null and a.status.toString() == 'COMPLETED'}"
+                            <!-- Notes όταν είναι COMPLETED ΚΑΙ pet δεν είναι deleted -->
+                            <form th:if="${a.status != null and a.status.toString() == 'COMPLETED' and !a.petDeleted}"
                                   th:action="@{|/ui/vet/appointments/${a.id}/notes|}"
                                   method="get"
                                   style="margin:0;">
                                 <button class="btn" type="submit">Notes</button>
                             </form>
+
+                            <!-- Αν είναι COMPLETED αλλά pet είναι deleted -> disabled indication -->
+                            <span th:if="${a.status != null and a.status.toString() == 'COMPLETED' and a.petDeleted}"
+                                  class="muted">
+                                Notes locked (pet deleted)
+                            </span>
+
 
                         </div>
                     </td>

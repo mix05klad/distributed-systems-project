@@ -12,6 +12,7 @@ public interface AppointmentMapper {
     @Mapping(source = "pet.name", target = "petName")
     @Mapping(source = "vet.id", target = "vetId")
     @Mapping(source = "vet.fullName", target = "vetName")
+    @Mapping(source = "pet.deleted", target = "petDeleted")
     @Mapping(target = "warnings", expression = "java(java.util.List.of())")
     AppointmentView toView(Appointment a);
 }

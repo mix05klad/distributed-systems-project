@@ -7,6 +7,9 @@ import gr.hua.dit.petcare.service.PetService;
 import gr.hua.dit.petcare.service.model.AppointmentView;
 import gr.hua.dit.petcare.service.model.CreatePetRequest;
 import gr.hua.dit.petcare.service.model.PetView;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,60 +31,71 @@ public class PetRestController {
         this.appointmentService = appointmentService;
     }
 
+    // Create pet (OWNER)
     @PreAuthorize("hasRole('OWNER')")
     @PostMapping
     public ResponseEntity<PetView> createPet(Authentication auth,
                                              @Valid @RequestBody CreatePetRequest request) {
         Long ownerId = getCurrentUserId(auth);
-        PetView pet = petService.createPet(request, ownerId);
-        return ResponseEntity.ok(pet);
+        return ResponseEntity.ok(petService.createPet(request, ownerId));
     }
 
+    // My pets (OWNER) -> only active (deleted=false)
     @PreAuthorize("hasRole('OWNER')")
     @GetMapping
     public ResponseEntity<List<PetView>> getMyPets(Authentication auth) {
         Long ownerId = getCurrentUserId(auth);
-        List<PetView> pets = petService.getPetsForOwner(ownerId);
-        return ResponseEntity.ok(pets);
+        return ResponseEntity.ok(petService.getPetsForOwner(ownerId));
     }
 
+    // Get single pet (OWNER) -> must be active + owned
     @PreAuthorize("hasRole('OWNER')")
-    @GetMapping("/{id}")
+    @GetMapping("/{petId}")
     public ResponseEntity<PetView> getPet(Authentication auth,
-                                          @PathVariable("id") Long id) {
-        Long requesterId = getCurrentUserId(auth);
-        PetView pet = petService.getPetById(id, requesterId);
-        return ResponseEntity.ok(pet);
+                                          @PathVariable Long petId) {
+        Long ownerId = getCurrentUserId(auth);
+        return ResponseEntity.ok(petService.getPetById(petId, ownerId));
     }
 
+    // Update pet (OWNER) -> must be active + owned
     @PreAuthorize("hasRole('OWNER')")
-    @PutMapping("/{id}")
+    @PutMapping("/{petId}")
     public ResponseEntity<PetView> updatePet(Authentication auth,
-                                             @PathVariable("id") Long id,
+                                             @PathVariable Long petId,
                                              @Valid @RequestBody CreatePetRequest request) {
-        Long requesterId = getCurrentUserId(auth);
-        PetView pet = petService.updatePet(id, request, requesterId);
-        return ResponseEntity.ok(pet);
+        Long ownerId = getCurrentUserId(auth);
+        return ResponseEntity.ok(petService.updatePet(petId, request, ownerId));
     }
 
+    @Operation(summary = "Soft delete a pet (OWNER)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Pet deleted (soft delete)"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
+            @ApiResponse(responseCode = "404", description = "Pet not found")
+    })
+    // Delete pet (OWNER) -> soft delete
     @PreAuthorize("hasRole('OWNER')")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{petId}")
     public ResponseEntity<Void> deletePet(Authentication auth,
-                                          @PathVariable("id") Long id) {
-        Long requesterId = getCurrentUserId(auth);
-        petService.deletePet(id, requesterId);
+                                          @PathVariable Long petId) {
+        Long ownerId = getCurrentUserId(auth);
+        petService.deletePet(petId, ownerId);
         return ResponseEntity.noContent().build();
     }
 
-    // Medical history για pet (OWNER)
+    // Medical history for pet (OWNER)
     @PreAuthorize("hasRole('OWNER')")
-    @GetMapping("/{id}/history")
+    @GetMapping("/{petId}/history")
     public ResponseEntity<List<AppointmentView>> getPetHistory(
             Authentication auth,
-            @PathVariable("id") Long petId,
+            @PathVariable Long petId,
             @RequestParam(name = "visitType", required = false) VisitType visitType
     ) {
         Long ownerId = getCurrentUserId(auth);
+
+
+        petService.getPetById(petId, ownerId);
+
         List<AppointmentView> history = appointmentService.getPetHistory(petId, ownerId);
 
         if (visitType != null) {
