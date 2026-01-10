@@ -97,7 +97,7 @@ cd distributed-systems-project
 ./mvnw spring-boot:run  # MacOS / Linux
 ./mvnw.cmd spring-boot:run  # Windows
 ```
-### 6) Open in browser: http://localhost:8080/index.html
+### 6) Open in browser: http://localhost:8080
 
 ## Demo Users (DataInitializer)
 ### Owners
